@@ -25,7 +25,7 @@ Dokumen kebutuhan lengkap ada di PRD tim. Bila PRD dan file ini berbeda, tanyaka
 
 | Kebutuhan | Pilihan |
 |---|---|
-| Framework | Next.js (App Router) + TypeScript |
+| Framework | Next.js (App Router) + javascritt |
 | UI | Tailwind CSS + shadcn/ui |
 | Peta | Leaflet + react-leaflet, tile OpenStreetMap |
 | Database, Auth, Storage | Supabase (`@supabase/ssr`) |
