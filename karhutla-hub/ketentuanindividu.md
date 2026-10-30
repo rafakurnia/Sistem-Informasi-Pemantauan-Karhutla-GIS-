@@ -57,49 +57,47 @@ SUPABASE_SERVICE_ROLE_KEY=     # hanya dipakai di server, tanpa awalan NEXT_PUBL
 
 Pemilik = satu-satunya orang yang boleh mengubah folder tersebut. Orang lain boleh membaca dan memakainya.
 
-```
 .
-\u251c\u2500 AGENTS.md                          Rafa
-\u251c\u2500 README.md                          Yujin (isi), Rafa (setup teknis)
-\u251c\u2500 .env.example                       Rafa
-\u251c\u2500 supabase/
-\u2502  \u251c\u2500 migrations/                     Rafa  (skema, RLS, trigger, kebijakan Storage)
-\u2502  \u2514\u2500 seed.sql                        Rafa  (data dummy dan akun uji)
-\u251c\u2500 public/                            Yujin (logo, ikon, gambar statis)
-\u2514\u2500 src/
-   \u251c\u2500 middleware.ts                   Rafa  (proteksi halaman dan role)
-   \u251c\u2500 types/                          Rafa  (tipe database dan tipe bersama)
-   \u251c\u2500 lib/
-   \u2502  \u251c\u2500 supabase/                    Rafa  (client.ts, server.ts, admin.ts khusus server)
-   \u2502  \u251c\u2500 validations/                 Rafa  (skema Zod, dipakai frontend dan server)
-   \u2502  \u251c\u2500 constants/                   Rafa  (status, role, label)
-   \u2502  \u2514\u2500 utils/                       Yujin (format tanggal, angka, helper tampilan)
-   \u251c\u2500 queries/                        Rafa  (fungsi baca data dan rekap, berjalan di server)
-   \u251c\u2500 actions/                        Rafa  (server action: laporan, verifikasi, penugasan,
-   \u2502                                            tindak-lanjut, admin, upload)
-   \u251c\u2500 app/
-   \u2502  \u251c\u2500 layout.tsx, globals.css      Yujin
-   \u2502  \u251c\u2500 loading.tsx, error.tsx,
-   \u2502  \u2502  not-found.tsx                Yujin
-   \u2502  \u251c\u2500 page.tsx                     Sabar (peta publik)
-   \u2502  \u251c\u2500 kejadian/[id]/               Sabar (detail kejadian publik)
-   \u2502  \u251c\u2500 (auth)/login, register/      Sabar
-   \u2502  \u251c\u2500 api/                         Rafa  (route handler bila diperlukan)
-   \u2502  \u2514\u2500 dashboard/
-   \u2502     \u251c\u2500 layout.tsx                Yujin (kerangka dashboard: sidebar, header)
-   \u2502     \u251c\u2500 pelapor/                  Sabar
-   \u2502     \u251c\u2500 petugas/                  Sabar
-   \u2502     \u2514\u2500 admin/                    Yujin
-   \u2514\u2500 components/
-      \u251c\u2500 ui/                          Yujin (shadcn dan komponen dasar)
-      \u251c\u2500 layout/                      Yujin (navbar, sidebar, footer)
-      \u251c\u2500 feedback/                    Yujin (loading, empty state, toast, konfirmasi)
-      \u251c\u2500 data-table/                  Yujin (tabel, pagination, kolom filter)
-      \u251c\u2500 admin/                       Yujin (komponen khusus halaman admin, grafik rekap)
-      \u251c\u2500 map/                         Sabar (peta, marker, legenda, filter, popup)
-      \u251c\u2500 laporan/                     Sabar (form laporan, kartu laporan, timeline status)
-      \u2514\u2500 petugas/                     Sabar (form verifikasi, form tindak lanjut, unggah bukti)
-```
+├─ AGENTS.md                          Rafa
+├─ README.md                          Yujin (isi), Rafa (setup teknis)
+├─ .env.example                       Rafa
+├─ supabase/
+│  ├─ migrations/                     Rafa  (skema, RLS, trigger, kebijakan Storage)
+│  └─ seed.sql                        Rafa  (data dummy dan akun uji)
+├─ public/                            Yujin (logo, ikon, gambar statis)
+└─ src/
+   ├─ middleware.ts                   Rafa  (proteksi halaman dan role)
+   ├─ types/                          Rafa  (tipe database dan tipe bersama)
+   ├─ lib/
+   │  ├─ supabase/                    Rafa  (client.ts, server.ts, admin.ts khusus server)
+   │  ├─ validations/                 Rafa  (skema Zod, dipakai frontend dan server)
+   │  ├─ constants/                   Rafa  (status, role, label)
+   │  └─ utils/                       Yujin (format tanggal, angka, helper tampilan)
+   ├─ queries/                        Rafa  (fungsi baca data dan rekap, berjalan di server)
+   ├─ actions/                        Rafa  (server action: laporan, verifikasi, penugasan,
+   │                                            tindak-lanjut, admin, upload)
+   ├─ app/
+   │  ├─ layout.tsx, globals.css      Yujin
+   │  ├─ loading.tsx, error.tsx,
+   │  │  not-found.tsx                Yujin
+   │  ├─ page.tsx                     Sabar (peta publik)
+   │  ├─ kejadian/[id]/               Sabar (detail kejadian publik)
+   │  ├─ (auth)/login, register/      Sabar
+   │  ├─ api/                         Rafa  (route handler bila diperlukan)
+   │  └─ dashboard/
+   │     ├─ layout.tsx                Yujin (kerangka dashboard: sidebar, header)
+   │     ├─ pelapor/                  Sabar
+   │     ├─ petugas/                  Sabar
+   │     └─ admin/                    Yujin
+   └─ components/
+      ├─ ui/                          Yujin (shadcn dan komponen dasar)
+      ├─ layout/                      Yujin (navbar, sidebar, footer)
+      ├─ feedback/                    Yujin (loading, empty state, toast, konfirmasi)
+      ├─ data-table/                  Yujin (tabel, pagination, kolom filter)
+      ├─ admin/                       Yujin (komponen khusus halaman admin, grafik rekap)
+      ├─ map/                         Sabar (peta, marker, legenda, filter, popup)
+      ├─ laporan/                     Sabar (form laporan, kartu laporan, timeline status)
+      └─ petugas/                     Sabar (form verifikasi, form tindak lanjut, unggah bukti)
 
 ### Ringkasan per orang
 
