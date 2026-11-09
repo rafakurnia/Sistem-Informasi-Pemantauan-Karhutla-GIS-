@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Check, CircleAlert, Info, X } from "lucide-react";
 
 const toastVariants = {
@@ -29,12 +29,13 @@ export default function Toast({
   onDismiss,
 }) {
   const { icon: Icon, styles, role } = toastVariants[variant] ?? toastVariants.info;
+  const dismiss = useCallback(() => onDismiss?.(), [onDismiss]);
 
   useEffect(() => {
     if (!onDismiss || duration <= 0) return undefined;
-    const timerId = window.setTimeout(onDismiss, duration);
+    const timerId = window.setTimeout(dismiss, duration);
     return () => window.clearTimeout(timerId);
-  }, [duration, onDismiss]);
+  }, [dismiss, duration, onDismiss]);
 
   return (
     <div
@@ -52,7 +53,7 @@ export default function Toast({
         <button
           aria-label="Tutup pemberitahuan"
           className="-mr-1 -mt-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-1"
-          onClick={onDismiss}
+          onClick={dismiss}
           type="button"
         >
           <X aria-hidden="true" className="size-4" />

@@ -1,5 +1,3 @@
-import Footer from "./Footer";
-import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
 export default function DashboardShell({ children }) {
@@ -8,9 +6,7 @@ export default function DashboardShell({ children }) {
       <Sidebar />
 
       <div className="dashboard-content-column">
-        <Navbar />
         <main className="dashboard-content">{children}</main>
-        <Footer />
       </div>
     </div>
   );
