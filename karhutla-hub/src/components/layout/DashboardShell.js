@@ -8,7 +8,6 @@ export default function DashboardShell({ children }) {
       <Sidebar />
 
       <div className="dashboard-content-column">
-        <Navbar />
         <main className="dashboard-content">{children}</main>
         <Footer />
       </div>
