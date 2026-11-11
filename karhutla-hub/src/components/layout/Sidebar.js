@@ -14,11 +14,11 @@ export default function Sidebar() {
       <Link
         className="dashboard-brand"
         href="/"
-        aria-label="Pemantauan Karhutla, halaman utama"
+        aria-label="SIGAPI, halaman utama"
       >
         <Image
           src="/karhutla-logo.svg"
-          alt="Pemantauan Karhutla"
+          alt="SIGAPI - Sistem Informasi Karhutla"
           width={220}
           height={43}
           priority
