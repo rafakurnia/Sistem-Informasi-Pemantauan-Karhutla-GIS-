@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import Button from "../ui/Button";
 
 export default function ConfirmationDialog({
@@ -15,6 +15,9 @@ export default function ConfirmationDialog({
   onCancel,
 }) {
   const dialogRef = useRef(null);
+  const dialogId = useId();
+  const titleId = `${dialogId}-title`;
+  const descriptionId = `${dialogId}-description`;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -26,8 +29,8 @@ export default function ConfirmationDialog({
 
   return (
     <dialog
-      aria-labelledby="confirmation-title"
-      aria-describedby={description ? "confirmation-description" : undefined}
+      aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
       className="w-[min(100%-32px,440px)] rounded-sm border border-[#dce5dd] bg-white p-0 text-[#18372e] shadow-2xl backdrop:bg-[#10392f]/45"
       onCancel={(event) => {
         event.preventDefault();
@@ -36,24 +39,25 @@ export default function ConfirmationDialog({
       ref={dialogRef}
     >
       <div className="p-6">
-        <h2 className="m-0 text-lg font-semibold" id="confirmation-title">
+        <h2 className="m-0 text-lg font-semibold" id={titleId}>
           {title}
         </h2>
         {description ? (
           <p
             className="mb-0 mt-2 text-sm leading-6 text-[#64776f]"
-            id="confirmation-description"
+            id={descriptionId}
           >
             {description}
           </p>
         ) : null}
         <div className="mt-6 flex justify-end gap-2">
-          <Button onClick={onCancel} variant="secondary">
+          <Button disabled={pending} onClick={onCancel} variant="secondary">
             {cancelLabel}
           </Button>
           <Button
             disabled={pending}
             onClick={onConfirm}
+            type="button"
             variant={destructive ? "danger" : "primary"}
           >
             {pending ? "Memproses..." : confirmLabel}

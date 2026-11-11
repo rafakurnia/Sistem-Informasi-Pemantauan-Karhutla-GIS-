@@ -1,67 +1,143 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ExternalLink, LogIn } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ChevronDown, Menu, X } from "lucide-react";
+import { useState } from "react";
 
-export default function Navbar({
-  variant = "public", // "public" atau "dashboard"
-  brand = "SIGAPI",
-  actionHref = "/login",
-  actionLabel = "Login",
-  publicHref = "/",
-  children,
-}) {
-  const isDashboard = variant === "dashboard";
-  const targetHref = isDashboard ? publicHref : actionHref;
-  const targetLabel = isDashboard ? "Peta publik" : actionLabel;
+const navigationItems = [
+  { label: "Beranda", href: "/" },
+  { label: "Peta Hotspot", href: "/" },
+  {
+    label: "Data",
+    children: [
+      { label: "Data Karhutla", href: "/data/karhutla" },
+      { label: "Statistik Hotspot", href: "/data/hotspot" },
+    ],
+  },
+  {
+    label: "Publikasi",
+    children: [
+      { label: "Daftar Publikasi", href: "/publikasi" },
+      { label: "Panduan Peta GIS", href: "/publikasi/panduan-gis" },
+    ],
+  },
+  { label: "Berita", href: "/berita" },
+  { label: "Tentang Kami", href: "/tentang-kami" },
+  { label: "Pelaporan", href: "/pelaporan", emphasis: true },
+];
+
+function isCurrentPath(pathname, href) {
+  if (!href || href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export default function Navbar() {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  function closeMobileMenu() {
+    setMobileOpen(false);
+  }
 
   return (
-    <header className="min-h-[72px] flex items-center justify-between gap-4 px-4 sm:px-8 bg-[#10392f] text-white border-b border-[#1b4d3f] shadow-sm">
-      <div className="flex items-center gap-3">
-        {/* Brand SIGAPI dengan logo karhutla-icon.svg */}
+    <header className="site-navbar">
+      <div className="site-navbar-inner">
         <Link
+          className="site-brand"
           href="/"
-          className="flex items-center gap-2.5 hover:opacity-90 transition-opacity"
-          aria-label="SIGAPI - Halaman Utama"
+          aria-label="SIGAPI, kembali ke beranda"
+          onClick={closeMobileMenu}
         >
           <Image
-            src="/karhutla-icon.svg"
-            alt="Logo SIGAPI"
-            width={38}
-            height={38}
-            className="h-9 w-9 shrink-0 drop-shadow-sm"
+            alt=""
+            className="site-brand-logo"
+            height={48}
             priority
+            src="/karhutla-icon.svg"
+            width={48}
           />
-          <div className="flex flex-col">
-            <span className="font-extrabold text-xl tracking-wider text-white leading-none">
-              {brand}
+          <span className="site-brand-copy">
+            <span className="site-brand-name">SIGAPI</span>
+            <span className="site-brand-tagline">
+              Sistem Informasi Pemantauan Karhutla
             </span>
-            <span className="text-[10px] sm:text-[11px] font-medium tracking-tight text-[#8ecf91] mt-1 leading-none">
-              Sistem Informasi Kebakaran Hutan dan Lahan
-            </span>
-          </div>
+          </span>
         </Link>
-      </div>
 
-      {/* Navigasi Aksi Kanan (Login untuk publik / Peta untuk admin) */}
-      <div className="flex items-center gap-3">
-        {children}
-
-        <Link
-          className="inline-flex items-center justify-center min-h-[38px] gap-2 px-4 py-1.5 rounded-lg bg-[#174a3a] hover:bg-[#1d5c48] border border-[#2d735d] text-white text-xs font-semibold shadow-xs transition-colors"
-          href={targetHref}
+        <button
+          aria-controls="site-primary-navigation"
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+          className="site-menu-toggle"
+          onClick={() => setMobileOpen((open) => !open)}
+          type="button"
         >
-          {isDashboard ? (
-            <>
-              <span>{targetLabel}</span>
-              <ExternalLink aria-hidden="true" className="size-3.5 text-[#8ecf91]" />
-            </>
+          {mobileOpen ? (
+            <X aria-hidden="true" className="size-5" />
           ) : (
-            <>
-              <LogIn aria-hidden="true" className="size-3.5 text-[#8ecf91]" />
-              <span>{targetLabel}</span>
-            </>
+            <Menu aria-hidden="true" className="size-5" />
           )}
-        </Link>
+        </button>
+
+        <nav
+          aria-label="Navigasi utama"
+          className={`site-primary-navigation${mobileOpen ? " is-open" : ""}`}
+          id="site-primary-navigation"
+        >
+          <ul className="site-navigation-list">
+            {navigationItems.map((item) => {
+              const active = item.href
+                ? isCurrentPath(pathname, item.href)
+                : item.children.some((child) => isCurrentPath(pathname, child.href));
+
+              return (
+                <li className="site-navigation-item" key={item.label}>
+                  {item.children ? (
+                    <details className="site-dropdown">
+                      <summary
+                        aria-current={active ? "page" : undefined}
+                        className="site-navigation-link site-dropdown-trigger"
+                      >
+                        {item.label}
+                        <ChevronDown
+                          aria-hidden="true"
+                          className="site-dropdown-icon size-3.5"
+                        />
+                      </summary>
+                      <ul className="site-dropdown-panel">
+                        {item.children.map((child) => (
+                          <li key={child.href}>
+                            <Link
+                              aria-current={isCurrentPath(pathname, child.href) ? "page" : undefined}
+                              className="site-dropdown-link"
+                              href={child.href}
+                              onClick={closeMobileMenu}
+                              prefetch={child.href === "/" || child.href === "/dashboard/admin"}
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ) : (
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className={`site-navigation-link${item.emphasis ? " site-navigation-link-emphasis" : ""}`}
+                      href={item.href}
+                      onClick={closeMobileMenu}
+                      prefetch={item.href === "/" || item.href === "/dashboard/admin"}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
       </div>
     </header>
   );

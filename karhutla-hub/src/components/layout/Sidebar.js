@@ -28,7 +28,12 @@ export default function Sidebar() {
       <p className="dashboard-nav-label">RUANG KERJA</p>
       <nav className="dashboard-navigation" aria-label="Navigasi dashboard">
         {dashboardAreas.map(({ href, label, icon: Icon }) => (
-          <Link className="dashboard-nav-link" href={href} key={href}>
+          <Link
+            className="dashboard-nav-link"
+            href={href}
+            key={href}
+            prefetch={href === "/dashboard/admin"}
+          >
             <Icon aria-hidden="true" className="size-4 shrink-0" />
             <span>{label}</span>
           </Link>
