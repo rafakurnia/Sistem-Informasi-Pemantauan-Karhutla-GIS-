@@ -1,27 +1,7 @@
-"use client";
+import { Suspense } from "react";
+import PetaPublikKonten from "@/components/map/PetaPublikKonten";
 
-import { useMemo, useState } from "react";
-import PetaKarhutla from "@/components/map/PetaKarhutla";
-import { DATA_TIRUAN_KEJADIAN } from "@/components/map/data-tiruan";
-
-const DAFTAR_WILAYAH = [
-  ...new Set(DATA_TIRUAN_KEJADIAN.map((kejadian) => kejadian.wilayah)),
-].sort((a, b) => a.localeCompare(b, "id"));
-
-export default function Home() {
-  const [status, setStatus] = useState("");
-  const [wilayah, setWilayah] = useState("");
-
-  const kejadianTersaring = useMemo(
-    () =>
-      DATA_TIRUAN_KEJADIAN.filter(
-        (kejadian) =>
-          (!status || kejadian.status === status) &&
-          (!wilayah || kejadian.wilayah === wilayah),
-      ),
-    [status, wilayah],
-  );
-
+export default function Home({ searchParams }) {
   return (
     <main className="flex-1 bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 sm:py-12">
       <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -38,25 +18,19 @@ export default function Home() {
           </p>
         </header>
 
-        <section
-          aria-label="Peta dan daftar kejadian karhutla"
-          className="space-y-3"
+        <Suspense
+          fallback={
+            <div
+              aria-live="polite"
+              className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600"
+              role="status"
+            >
+              Menyiapkan data peta...
+            </div>
+          }
         >
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-semibold">Sebaran kejadian</h2>
-            <p aria-live="polite" className="text-sm text-slate-600">
-              {kejadianTersaring.length} kejadian ditampilkan
-            </p>
-          </div>
-          <PetaKarhutla
-            daftarWilayah={DAFTAR_WILAYAH}
-            kejadian={kejadianTersaring}
-            onStatusChange={setStatus}
-            onWilayahChange={setWilayah}
-            status={status}
-            wilayah={wilayah}
-          />
-        </section>
+          <PetaPublikKonten searchParams={searchParams} />
+        </Suspense>
 
         <p className="text-xs leading-5 text-slate-500">
           Tampilan ini menggunakan data contoh sementara. Data kejadian akan
