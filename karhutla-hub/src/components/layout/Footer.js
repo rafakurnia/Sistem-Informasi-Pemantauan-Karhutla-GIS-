@@ -20,7 +20,7 @@ function FooterLinks({ links }) {
   return (
     <ul className="site-footer-links">
       {links.map((link) => (
-        <li key={link.href}>
+        <li key={link.label}>
           <Link href={link.href} prefetch={link.href === "/"}>
             {link.label}
           </Link>

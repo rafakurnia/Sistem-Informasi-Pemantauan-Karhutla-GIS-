@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 export default function PetaInner({ kejadian = [] }) {
   return (
-    <div className="h-[55vh] min-h-[320px] max-h-[640px] w-full overflow-hidden rounded-xl border border-slate-200">
+    <div className="relative z-0 isolate h-[55vh] min-h-[320px] max-h-[640px] w-full overflow-hidden rounded-xl border border-slate-200">
       <MapContainer
         aria-label="Peta lokasi kejadian kebakaran hutan dan lahan di Indonesia"
         center={[-2.5, 118]}
