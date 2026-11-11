@@ -25,7 +25,8 @@ const navigationItems = [
   },
   { label: "Berita", href: "/berita" },
   { label: "Tentang Kami", href: "/tentang-kami" },
-  { label: "Pelaporan", href: "/pelaporan", emphasis: true },
+  { label: "Pelaporan", href: "/dashboard/pelapor" },
+  { label: "Masuk", href: "/login", emphasis: true },
 ];
 
 function isCurrentPath(pathname, href) {
