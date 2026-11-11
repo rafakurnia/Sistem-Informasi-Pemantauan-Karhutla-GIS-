@@ -1,8 +1,10 @@
-// TODO: ganti konstanta ini dengan src/lib/constants/status.js milik Rafa.
+import { STATUS_LAPORAN } from "../laporan/status";
+
+// TODO: ganti konfigurasi status peta ini dengan konfigurasi publik Rafa.
 export const STATUS_KEJADIAN = Object.freeze({
-  TERVERIFIKASI: "terverifikasi",
-  DITANGANI: "ditangani",
-  SELESAI: "selesai",
+  TERVERIFIKASI: STATUS_LAPORAN.TERVERIFIKASI,
+  DITANGANI: STATUS_LAPORAN.DITANGANI,
+  SELESAI: STATUS_LAPORAN.SELESAI,
 });
 
 export const KONFIGURASI_STATUS = Object.freeze({
