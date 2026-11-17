@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
 
 const navigationItems = [
@@ -61,7 +61,7 @@ export default function Navbar() {
           <span className="site-brand-copy">
             <span className="site-brand-name">SIGAPI</span>
             <span className="site-brand-tagline">
-              Sistem Informasi Pemantauan Karhutla
+              SISTEM INFORMASI PEMANTAUAN KARHUTLA
             </span>
           </span>
         </Link>
@@ -89,7 +89,9 @@ export default function Navbar() {
           <ul className="site-navigation-list">
             {navigationItems.map((item) => {
               const active = item.href
-                ? isCurrentPath(pathname, item.href)
+                ? item.href === "/"
+                  ? item.label === "Beranda" && pathname === "/"
+                  : isCurrentPath(pathname, item.href)
                 : item.children.some((child) => isCurrentPath(pathname, child.href));
 
               return (
@@ -138,6 +140,18 @@ export default function Navbar() {
             })}
           </ul>
         </nav>
+
+        <div className="site-navbar-actions">
+          <span className="site-language" aria-label="Bahasa Indonesia">
+            <span aria-hidden="true" className="site-language-flag">🇮🇩</span>
+            ID
+            <ChevronDown aria-hidden="true" className="size-3.5" />
+          </span>
+          <Link className="site-login-link" href="/dashboard/admin">
+            <UserRound aria-hidden="true" className="size-4" />
+            <span>Masuk</span>
+          </Link>
+        </div>
       </div>
     </header>
   );

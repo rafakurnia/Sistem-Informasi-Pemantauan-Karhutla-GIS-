@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ClipboardList, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 const dashboardAreas = [
@@ -9,26 +12,33 @@ const dashboardAreas = [
 ];
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="dashboard-sidebar">
       <Link
         className="dashboard-brand"
         href="/"
-        aria-label="Pemantauan Karhutla, halaman utama"
+        aria-label="SIGAPI, halaman utama"
       >
         <Image
-          src="/karhutla-logo.svg"
-          alt="Pemantauan Karhutla"
-          width={220}
-          height={43}
+          src="/karhutla-icon.svg"
+          alt=""
+          width={38}
+          height={38}
           priority
         />
+        <span className="dashboard-brand-copy">
+          <strong>SIGAPI</strong>
+          <span>Pemantauan Karhutla</span>
+        </span>
       </Link>
 
       <p className="dashboard-nav-label">RUANG KERJA</p>
       <nav className="dashboard-navigation" aria-label="Navigasi dashboard">
         {dashboardAreas.map(({ href, label, icon: Icon }) => (
           <Link
+            aria-current={pathname === href ? "page" : undefined}
             className="dashboard-nav-link"
             href={href}
             key={href}
@@ -41,7 +51,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="dashboard-sidebar-note">
-        <p>Pemantauan kebakaran hutan dan lahan berbasis wilayah.</p>
+        <p>Sistem informasi pemantauan kebakaran hutan dan lahan berbasis wilayah.</p>
       </div>
     </aside>
   );
