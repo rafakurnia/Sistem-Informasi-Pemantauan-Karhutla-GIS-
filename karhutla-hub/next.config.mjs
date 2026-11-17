@@ -5,8 +5,6 @@ const nextConfig = {
     agentFeedback: true,
     agentUpgrade: "security",
   },
-  cacheComponents: true,
-  partialPrefetching: true,
   reactCompiler: true,
   turbopack: {
     rules: {

@@ -22,9 +22,7 @@ export default function PetaKarhutla({
   loading = false,
   error = null,
   status = "",
-  onStatusChange,
   wilayah = "",
-  onWilayahChange,
   daftarWilayah = [],
 }) {
   if (error) {
@@ -54,28 +52,27 @@ export default function PetaKarhutla({
     );
   }
 
-  if (kejadian.length === 0) {
-    return (
-      <div
-        className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600"
-        role="status"
-      >
-        Belum ada kejadian karhutla untuk ditampilkan.
-      </div>
-    );
-  }
-
   return (
     <section aria-label="Peta publik kejadian karhutla" className="space-y-4">
       <FilterPeta
         daftarWilayah={daftarWilayah}
-        onStatusChange={onStatusChange}
-        onWilayahChange={onWilayahChange}
         status={status}
         wilayah={wilayah}
       />
-      <PetaLeaflet kejadian={kejadian} />
-      <LegendaPeta />
+      {kejadian.length === 0 ? (
+        <div
+          className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600"
+          role="status"
+        >
+          Belum ada kejadian karhutla untuk filter ini. Coba ubah filter atau
+          pilih semua status dan wilayah.
+        </div>
+      ) : (
+        <>
+          <PetaLeaflet kejadian={kejadian} />
+          <LegendaPeta />
+        </>
+      )}
     </section>
   );
 }

@@ -290,7 +290,7 @@ a {
 .site-navbar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 1100;
   color: #27352e;
   border-bottom: 1px solid #e8ebe8;
   background: #ffffff;
@@ -478,7 +478,7 @@ a {
   position: absolute;
   top: calc(100% + 5px);
   left: 0;
-  z-index: 60;
+  z-index: 1200;
   min-width: 210px;
   display: none;
   gap: 3px;
