@@ -8,7 +8,13 @@ import { useState } from "react";
 
 const navigationItems = [
   { label: "Beranda", href: "/" },
-  { label: "Peta Hotspot", href: "/" },
+  {
+    label: "Peta Hotspot",
+    children: [
+      { label: "Lihat Peta", href: "/" },
+      { label: "Buat Laporan", href: "/dashboard/pelapor" },
+    ],
+  },
   {
     label: "Data",
     children: [
@@ -25,7 +31,6 @@ const navigationItems = [
   },
   { label: "Berita", href: "/berita" },
   { label: "Tentang Kami", href: "/tentang-kami" },
-  { label: "Pelaporan", href: "/dashboard/pelapor" },
   { label: "Masuk", href: "/login", emphasis: true },
 ];
 
@@ -37,6 +42,8 @@ function isCurrentPath(pathname, href) {
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (pathname?.startsWith("/dashboard/admin")) return null;
 
   function closeMobileMenu() {
     setMobileOpen(false);
@@ -93,7 +100,11 @@ export default function Navbar() {
                 ? item.href === "/"
                   ? item.label === "Beranda" && pathname === "/"
                   : isCurrentPath(pathname, item.href)
-                : item.children.some((child) => isCurrentPath(pathname, child.href));
+                : item.children.some(
+                    (child) =>
+                      (child.href !== "/" || pathname !== "/") &&
+                      isCurrentPath(pathname, child.href),
+                  );
 
               return (
                 <li className="site-navigation-item" key={item.label}>

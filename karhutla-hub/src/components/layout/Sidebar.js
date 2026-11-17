@@ -13,6 +13,10 @@ const dashboardAreas = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const isAdminArea = pathname.startsWith("/dashboard/admin");
+  const visibleAreas = isAdminArea
+    ? dashboardAreas.filter(({ href }) => href !== "/dashboard/pelapor")
+    : dashboardAreas;
 
   return (
     <aside className="dashboard-sidebar">
@@ -36,7 +40,7 @@ export default function Sidebar() {
 
       <p className="dashboard-nav-label">RUANG KERJA</p>
       <nav className="dashboard-navigation" aria-label="Navigasi dashboard">
-        {dashboardAreas.map(({ href, label, icon: Icon }) => (
+        {visibleAreas.map(({ href, label, icon: Icon }) => (
           <Link
             aria-current={pathname === href ? "page" : undefined}
             className="dashboard-nav-link"
