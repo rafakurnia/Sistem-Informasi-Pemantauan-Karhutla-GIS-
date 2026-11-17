@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const relatedLinks = [
   { label: "Beranda", href: "/" },
-  { label: "Peta Hotspot", href: "/" },
+  { label: "Peta Hotspot", href: "/peta" },
   { label: "Data Karhutla", href: "/data/karhutla" },
   { label: "Berita", href: "/berita" },
   { label: "Tentang Kami", href: "/tentang-kami" },

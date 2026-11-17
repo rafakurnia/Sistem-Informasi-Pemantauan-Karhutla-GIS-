@@ -4,7 +4,7 @@ export default function LegendaPeta() {
   return (
     <ul
       aria-label="Legenda status kejadian"
-      className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-700"
+      className="map-legend-list"
     >
       {Object.entries(KONFIGURASI_STATUS).map(([status, konfigurasi]) => (
         <li className="inline-flex items-center gap-2" key={status}>

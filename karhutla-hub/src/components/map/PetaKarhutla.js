@@ -32,7 +32,7 @@ export default function PetaKarhutla({
     return (
       <div
         aria-live="assertive"
-        className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        className="map-error-state"
         role="alert"
       >
         Peta kejadian gagal dimuat. {pesanError}
@@ -44,7 +44,7 @@ export default function PetaKarhutla({
     return (
       <div
         aria-live="polite"
-        className="flex h-[55vh] min-h-[320px] max-h-[640px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-600"
+        className="map-loading-state"
         role="status"
       >
         Memuat data kejadian karhutla...
@@ -53,7 +53,7 @@ export default function PetaKarhutla({
   }
 
   return (
-    <section aria-label="Peta publik kejadian karhutla" className="space-y-4">
+    <section aria-label="Peta publik kejadian karhutla" className="map-workspace">
       <FilterPeta
         daftarWilayah={daftarWilayah}
         status={status}
@@ -61,7 +61,7 @@ export default function PetaKarhutla({
       />
       {kejadian.length === 0 ? (
         <div
-          className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600"
+          className="map-empty-state"
           role="status"
         >
           Belum ada kejadian karhutla untuk filter ini. Coba ubah filter atau
@@ -70,7 +70,10 @@ export default function PetaKarhutla({
       ) : (
         <>
           <PetaLeaflet kejadian={kejadian} />
-          <LegendaPeta />
+          <div className="map-legend-panel">
+            <h3>Legenda status kejadian</h3>
+            <LegendaPeta />
+          </div>
         </>
       )}
     </section>

@@ -8,7 +8,7 @@ import { useState } from "react";
 
 const navigationItems = [
   { label: "Beranda", href: "/" },
-  { label: "Peta Hotspot", href: "/" },
+  { label: "Peta Hotspot", href: "/peta" },
   {
     label: "Data",
     children: [
@@ -129,7 +129,7 @@ export default function Navbar() {
                       className={`site-navigation-link${item.emphasis ? " site-navigation-link-emphasis" : ""}`}
                       href={item.href}
                       onClick={closeMobileMenu}
-                      prefetch={item.href === "/" || item.href === "/dashboard/admin"}
+                      prefetch={item.href === "/" || item.href === "/peta" || item.href === "/dashboard/admin"}
                     >
                       {item.label}
                     </Link>
