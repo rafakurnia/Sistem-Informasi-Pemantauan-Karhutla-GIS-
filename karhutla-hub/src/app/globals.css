@@ -55,6 +55,10 @@ a {
   background: #ffffff;
 }
 
+.dashboard-sidebar-admin {
+  min-height: 100vh;
+}
+
 .dashboard-brand {
   display: flex;
   align-items: center;
@@ -133,8 +137,11 @@ a {
   font-weight: 650;
 }
 
-.dashboard-sidebar-note {
+.dashboard-sidebar-footer {
   margin-top: auto;
+}
+
+.dashboard-sidebar-note {
   padding: 16px 10px 4px;
   border-top: 1px solid #e7ece7;
   color: #758279;
@@ -145,6 +152,37 @@ a {
 .dashboard-sidebar-note p {
   max-width: 190px;
   margin: 0;
+}
+
+.dashboard-logout-button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 0 11px;
+  border: 1px solid #f0d9d5;
+  border-radius: 6px;
+  color: #a63d32;
+  background: #fff8f7;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.dashboard-logout-button:hover,
+.dashboard-logout-button:focus-visible {
+  border-color: #e8bdb6;
+  color: #8e2d24;
+  background: #fff0ee;
+  outline: none;
 }
 
 .dashboard-content-column {
@@ -223,6 +261,10 @@ a {
     padding: 14px 16px 12px;
   }
 
+  .dashboard-sidebar-admin {
+    min-height: 100vh;
+  }
+
   .dashboard-brand {
     min-height: 40px;
   }
@@ -252,6 +294,14 @@ a {
 
   .dashboard-sidebar-note {
     display: none;
+  }
+
+  .dashboard-sidebar-admin .dashboard-sidebar-footer {
+    margin-top: 14px;
+  }
+
+  .dashboard-logout-button {
+    margin-top: 0;
   }
 
   .dashboard-topbar {

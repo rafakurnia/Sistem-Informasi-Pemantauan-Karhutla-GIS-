@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { ClipboardList, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { logoutAction } from "@/actions/auth";
 
 const dashboardAreas = [
   { href: "/dashboard/admin", label: "Administrasi", icon: LayoutDashboard },
@@ -19,7 +20,9 @@ export default function Sidebar() {
     : dashboardAreas;
 
   return (
-    <aside className="dashboard-sidebar">
+    <aside
+      className={`dashboard-sidebar${isAdminArea ? " dashboard-sidebar-admin" : ""}`}
+    >
       <Link
         className="dashboard-brand"
         href="/"
@@ -54,8 +57,21 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="dashboard-sidebar-note">
-        <p>Sistem informasi pemantauan kebakaran hutan dan lahan berbasis wilayah.</p>
+      <div className="dashboard-sidebar-footer">
+        <div className="dashboard-sidebar-note">
+          <p>
+            Sistem informasi pemantauan kebakaran hutan dan lahan berbasis
+            wilayah.
+          </p>
+        </div>
+        {isAdminArea && (
+          <form action={logoutAction}>
+            <button className="dashboard-logout-button" type="submit">
+              <LogOut aria-hidden="true" className="size-4 shrink-0" />
+              <span>Logout sebagai Admin</span>
+            </button>
+          </form>
+        )}
       </div>
     </aside>
   );
