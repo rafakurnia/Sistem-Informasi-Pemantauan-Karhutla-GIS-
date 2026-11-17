@@ -142,7 +142,7 @@ export default function Navbar() {
                       className={`site-navigation-link${item.emphasis ? " site-navigation-link-emphasis" : ""}`}
                       href={item.href}
                       onClick={closeMobileMenu}
-                      prefetch={item.href === "/" || item.href === "/dashboard/admin"}
+                      prefetch={item.href === "/" || item.href === "/peta" || item.href === "/dashboard/admin"}
                     >
                       {item.label}
                     </Link>

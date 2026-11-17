@@ -6,12 +6,12 @@ export default function FilterPeta({
   daftarWilayah = [],
 }) {
   return (
-    <form action="/" className="space-y-3" method="get">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+    <form action="/peta" className="map-filter-form" method="get">
+      <div className="map-filter-fields">
+        <label className="map-filter-label">
           Filter berdasarkan status
           <select
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            className="map-filter-select"
             defaultValue={status}
             name="status"
           >
@@ -26,10 +26,10 @@ export default function FilterPeta({
           </select>
         </label>
 
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+        <label className="map-filter-label">
           Filter berdasarkan wilayah
           <select
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            className="map-filter-select"
             defaultValue={wilayah}
             name="wilayah"
           >
@@ -43,7 +43,7 @@ export default function FilterPeta({
         </label>
       </div>
       <button
-        className="min-h-11 rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+        className="map-filter-submit"
         type="submit"
       >
         Terapkan filter

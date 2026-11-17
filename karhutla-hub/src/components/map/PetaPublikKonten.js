@@ -35,11 +35,11 @@ export default async function PetaPublikKonten({ searchParams }) {
   return (
     <section
       aria-label="Peta dan daftar kejadian karhutla"
-      className="space-y-3"
+      className="map-results"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">Sebaran kejadian</h2>
-        <p aria-live="polite" className="text-sm text-slate-600">
+      <div className="map-results-heading">
+        <h2>Sebaran kejadian</h2>
+        <p aria-live="polite">
           {kejadianTersaring.length} kejadian ditampilkan
         </p>
       </div>
