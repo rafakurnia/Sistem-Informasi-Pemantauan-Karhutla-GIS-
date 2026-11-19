@@ -1,16 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const relatedLinks = [
   { label: "Peta Interaktif", href: "/" },
-  { label: "Dasbor", href: "/dashboard/admin" },
-  { label: "Pelaporan", href: "/pelaporan" },
+  { label: "Dasbor Admin", href: "/dashboard/admin" },
+  { label: "Area Pelapor", href: "/dashboard/pelapor" },
 ];
 
 const guideLinks = [
   { label: "Data Karhutla", href: "/data/karhutla" },
   { label: "Publikasi", href: "/publikasi" },
-  { label: "Panduan", href: "/panduan" },
+  { label: "Panduan Peta GIS", href: "/publikasi/panduan-gis" },
 ];
 
 function FooterLinks({ links }) {
@@ -28,6 +31,9 @@ function FooterLinks({ links }) {
 }
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname === "/peta") return null;
+
   return (
     <footer className="site-footer">
       <div className="site-footer-brand-row">
