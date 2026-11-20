@@ -85,7 +85,7 @@ export default function FormLaporan({ daftarWilayah = [] }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold uppercase text-[#40574d] mb-1">
-                Pilih Wilayah Terdekat
+                Pilih Provinsi / Wilayah Kejadian
               </label>
               <select
                 name="wilayah_id"
@@ -93,7 +93,7 @@ export default function FormLaporan({ daftarWilayah = [] }) {
                 onChange={isiKoordinatWilayah}
                 className="w-full rounded-lg border border-[#c8ddd5] bg-white px-3 py-2 text-sm text-[#18372e] outline-none focus:ring-2 focus:ring-[#2d6a4f]"
               >
-                <option value="">-- Pilih Wilayah --</option>
+                <option value="">-- Pilih Provinsi / Wilayah --</option>
                 {daftarWilayah.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.nama_wilayah} ({w.kode_wilayah})
