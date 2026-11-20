@@ -4,7 +4,6 @@
 // Peta Komprehensif Karhutla Full-Screen ala SiPongi KLHK
 
 import { useState, useMemo, useCallback } from "react";
-import { PROVINSI_INDONESIA } from "./data-tiruan";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
@@ -64,13 +63,20 @@ export default function PetaSipongiView({
   // State provinsi yang di-fly-to
   const [targetProvinsi, setTargetProvinsi] = useState(null);
 
-  // Handler ganti provinsi
+  // Handler ganti provinsi (dari data Supabase)
   function handleFilterProvinsi(e) {
-    const id = e.target.value;
-    setFilterProvinsi(id);
-    if (id) {
-      const prov = PROVINSI_INDONESIA.find((p) => p.id === id);
-      if (prov) setTargetProvinsi(prov);
+    const wilayahId = e.target.value;
+    setFilterProvinsi(wilayahId);
+    if (wilayahId) {
+      const w = daftarWilayah.find((item) => String(item.id) === String(wilayahId));
+      if (w && w.latitude && w.longitude) {
+        setTargetProvinsi({
+          lat: Number(w.latitude),
+          lng: Number(w.longitude),
+          zoom: 8,
+          nama: w.nama_wilayah,
+        });
+      }
     } else {
       setTargetProvinsi(null);
     }
@@ -89,12 +95,20 @@ export default function PetaSipongiView({
   // Filter Data Kejadian
   const kejadianTersaring = useMemo(() => {
     return laporanList.filter((item) => {
-      // 1. Filter Status
+      // 1. Filter Provinsi/Wilayah dari Database Supabase
+      if (filterProvinsi) {
+        const idWilayah = item.wilayah?.id ?? item.wilayah_id;
+        if (String(idWilayah) !== String(filterProvinsi)) {
+          return false;
+        }
+      }
+
+      // 2. Filter Status
       if (filterStatus && item.status !== filterStatus) {
         return false;
       }
 
-      // 2. Filter Waktu
+      // 3. Filter Waktu
       if (filterWaktu !== "semua") {
         const waktuItem = new Date(
           item.waktu_kejadian || item.created_at || item.waktu
@@ -108,7 +122,7 @@ export default function PetaSipongiView({
 
       return true;
     });
-  }, [laporanList, filterStatus, filterWaktu]);
+  }, [laporanList, filterProvinsi, filterStatus, filterWaktu]);
 
   // Ringkasan Jumlah
   const ringkasan = useMemo(() => {
@@ -222,24 +236,19 @@ export default function PetaSipongiView({
             <span>FILTER</span>
           </div>
 
-          {/* Filter Provinsi Indonesia */}
+          {/* Filter Provinsi Indonesia (Langsung dari Database Supabase) */}
           <div className="relative">
             <select
               value={filterProvinsi}
               onChange={handleFilterProvinsi}
-              className="text-xs bg-[#f4f7f5] hover:bg-[#ebf2ed] text-[#143e2f] font-medium py-1.5 px-3 rounded-lg border border-[#c8ddd5] outline-none cursor-pointer transition max-w-[160px]"
+              className="text-xs bg-[#f4f7f5] hover:bg-[#ebf2ed] text-[#143e2f] font-medium py-1.5 px-3 rounded-lg border border-[#c8ddd5] outline-none cursor-pointer transition max-w-[170px]"
             >
               <option value="">Semua Provinsi</option>
-              <optgroup label="🔥 Rawan Karhutla">
-                {PROVINSI_INDONESIA.filter((p) => p.rawan).map((p) => (
-                  <option key={p.id} value={p.id}>{p.nama}</option>
-                ))}
-              </optgroup>
-              <optgroup label="Provinsi Lainnya">
-                {PROVINSI_INDONESIA.filter((p) => !p.rawan).map((p) => (
-                  <option key={p.id} value={p.id}>{p.nama}</option>
-                ))}
-              </optgroup>
+              {daftarWilayah.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.nama_wilayah}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -570,7 +579,7 @@ export default function PetaSipongiView({
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                    Pilih Wilayah
+                    Provinsi / Wilayah Kejadian
                   </label>
                   <select
                     name="wilayah_id"
@@ -578,7 +587,7 @@ export default function PetaSipongiView({
                     onChange={handleWilayahChangeForm}
                     className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-[#166534]"
                   >
-                    <option value="">-- Pilih Wilayah Terdekat --</option>
+                    <option value="">-- Pilih Provinsi / Wilayah --</option>
                     {daftarWilayah.map((w) => (
                       <option key={w.id} value={w.id}>
                         {w.nama_wilayah} ({w.kode_wilayah})
