@@ -6,15 +6,22 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * Mengambil ringkasan indikator laporan untuk Dashboard Admin.
  * Catatan aturan: Laporan 'ditolak' tidak dihitung sebagai kejadian terverifikasi.
+ * Menyertakan jumlah petugas dan wilayah untuk metrik lengkap.
  */
 export async function ambilRekapStatistik() {
   const supabase = await createClient();
 
-  const { data: laporan, error } = await supabase
-    .from("laporan")
-    .select("status, created_at, wilayah_id");
+  const [
+    { data: laporan, error: lapError },
+    { count: jumlahPetugas, error: petError },
+    { count: jumlahWilayah, error: wilError },
+  ] = await Promise.all([
+    supabase.from("laporan").select("status, created_at, wilayah_id"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "petugas"),
+    supabase.from("wilayah").select("id", { count: "exact", head: true }),
+  ]);
 
-  if (error || !laporan) {
+  if (lapError || !laporan) {
     return {
       totalKejadian: 0,
       perluVerifikasi: 0,
@@ -22,6 +29,8 @@ export async function ambilRekapStatistik() {
       selesaiDitangani: 0,
       ditolak: 0,
       totalSemua: 0,
+      jumlahPetugas: jumlahPetugas || 0,
+      jumlahWilayah: jumlahWilayah || 0,
     };
   }
 
@@ -41,6 +50,27 @@ export async function ambilRekapStatistik() {
     selesaiDitangani,
     ditolak,
     totalSemua: laporan.length,
+    jumlahPetugas: jumlahPetugas || 0,
+    jumlahWilayah: jumlahWilayah || 0,
   };
 }
 
+/**
+ * Mengambil daftar petugas aktif untuk penugasan oleh Admin.
+ */
+export async function ambilDaftarPetugas() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, nama, nomor_hp, role, created_at")
+    .eq("role", "petugas")
+    .order("nama", { ascending: true });
+
+  if (error) {
+    console.error("Gagal mengambil data petugas:", error.message);
+    return [];
+  }
+
+  return data || [];
+}

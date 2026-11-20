@@ -42,7 +42,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
     const res = await catatTindakLanjutAction({
       laporan_id: laporanId,
       keterangan,
-      status_target: statusTarget,
+      status_baru: statusTarget,
       bukti_paths: [],
     });
     setLoading(false);

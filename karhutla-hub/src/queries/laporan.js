@@ -21,6 +21,7 @@ export async function ambilLaporanPublik() {
       waktu_kejadian,
       deskripsi,
       status,
+      catatan_petugas,
       created_at,
       wilayah:wilayah_id (
         id,
@@ -30,6 +31,16 @@ export async function ambilLaporanPublik() {
       fotos:laporan_foto (
         id,
         foto_url
+      ),
+      tindak_lanjut (
+        id,
+        keterangan,
+        created_at,
+        bukti:bukti_penanganan (
+          id,
+          foto_url,
+          deskripsi
+        )
       )
     `)
     .in("status", ["terverifikasi", "ditangani", "selesai"])
@@ -121,11 +132,22 @@ export async function ambilLaporanSaya() {
       updated_at,
       wilayah:wilayah_id (
         id,
-        nama_wilayah
+        nama_wilayah,
+        kode_wilayah
       ),
       fotos:laporan_foto (
         id,
         foto_url
+      ),
+      tindak_lanjut (
+        id,
+        keterangan,
+        created_at,
+        bukti:bukti_penanganan (
+          id,
+          foto_url,
+          deskripsi
+        )
       )
     `)
     .eq("pelapor_id", user.id)
@@ -234,6 +256,67 @@ export async function ambilTugasPetugasSaya() {
   }
 
   return data || [];
+}
+
+/**
+ * Mengambil rekap seluruh laporan operasional untuk Petugas Lapangan.
+ * Menghasilkan:
+ * - antreanMasuk: status 'menunggu_verifikasi'
+ * - dalamPenanganan: status 'terverifikasi' dan 'ditangani'
+ * - laporanSelesai: status 'selesai'
+ */
+export async function ambilLaporanPetugas() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("laporan")
+    .select(`
+      id,
+      latitude,
+      longitude,
+      waktu_kejadian,
+      deskripsi,
+      status,
+      catatan_petugas,
+      created_at,
+      pelapor:pelapor_id (
+        id,
+        nama,
+        nomor_hp
+      ),
+      wilayah:wilayah_id (
+        id,
+        nama_wilayah,
+        kode_wilayah
+      ),
+      fotos:laporan_foto (
+        id,
+        foto_url
+      ),
+      tindak_lanjut (
+        id,
+        keterangan,
+        created_at,
+        bukti:bukti_penanganan (
+          id,
+          foto_url,
+          deskripsi
+        )
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Gagal mengambil laporan petugas:", error.message);
+    return { antreanMasuk: [], dalamPenanganan: [], laporanSelesai: [] };
+  }
+
+  const all = data || [];
+  return {
+    antreanMasuk: all.filter((l) => l.status === "menunggu_verifikasi"),
+    dalamPenanganan: all.filter((l) => l.status === "terverifikasi" || l.status === "ditangani"),
+    laporanSelesai: all.filter((l) => l.status === "selesai"),
+  };
 }
 
 /**
