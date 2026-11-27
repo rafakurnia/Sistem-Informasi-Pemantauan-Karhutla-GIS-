@@ -90,7 +90,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
           setUploadError(`Gagal upload foto: ${uploadRes.error}`);
           return;
         }
-        buktiPaths.push(uploadRes.data.url || uploadRes.data.path);
+        buktiPaths.push(uploadRes.data.path);
       }
 
       // 2. Simpan tindak lanjut + bukti ke database
