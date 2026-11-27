@@ -16,7 +16,7 @@ export default async function PetaHotspotPage() {
   const supabase = await createClient();
 
   // 1. Ambil Data Titik Hotspot & Wilayah dari Database Supabase
-  const [daftarLaporan, daftarWilayah] = await Promise.all([
+  const [laporanPublik, daftarWilayah] = await Promise.all([
     ambilLaporanPublik(),
     ambilDaftarWilayah(),
   ]);
@@ -48,10 +48,20 @@ export default async function PetaHotspotPage() {
     }
   }
 
+  // 3. Gabungkan laporan publik dengan antrean verifikasi untuk petugas/admin
+  //    agar titik kuning (menunggu_verifikasi) juga tampil di peta mereka.
+  //    Hindari duplikat berdasarkan ID.
+  let laporanAwal = laporanPublik || [];
+  if (antreanVerifikasi.length > 0) {
+    const idPublik = new Set(laporanAwal.map((l) => l.id));
+    const tambahanAntrean = antreanVerifikasi.filter((l) => !idPublik.has(l.id));
+    laporanAwal = [...laporanAwal, ...tambahanAntrean];
+  }
+
   return (
     <main className="w-full h-[calc(100vh-70px)] relative overflow-hidden bg-[#0d2a20]">
       <PetaSipongiView
-        laporanAwal={daftarLaporan || []}
+        laporanAwal={laporanAwal}
         daftarWilayah={daftarWilayah || []}
         currentUser={currentUser}
         laporanSaya={laporanSaya || []}
