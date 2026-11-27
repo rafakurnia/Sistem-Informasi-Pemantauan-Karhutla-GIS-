@@ -10,7 +10,7 @@ import { verifikasiLaporanAction } from "@/actions/verifikasi";
 import { catatTindakLanjutAction } from "@/actions/tindak-lanjut";
 import { uploadFotoAction } from "@/actions/upload";
 import Button from "@/components/ui/Button";
-import { FileImage, X, Upload, Loader2 } from "lucide-react";
+import { FileImage, X, Upload, Loader2, AlertCircle } from "lucide-react";
 
 export default function AksiPetugas({ laporanId, statusSekarang }) {
   const router = useRouter();
@@ -24,12 +24,15 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
   const [statusTarget, setStatusTarget] = useState("ditangani");
 
   // State untuk foto bukti
-  const [fotoFiles, setFotoFiles] = useState([]); // File[] yang dipilih user
+  const [fotoFiles, setFotoFiles] = useState([]);
   const [uploadError, setUploadError] = useState("");
+  // Error inline — ditampilkan di dalam form, bukan alert()
+  const [actionError, setActionError] = useState("");
+  const [verifikasiError, setVerifikasiError] = useState("");
 
   function handlePilihFoto(e) {
     const files = Array.from(e.target.files || []);
-    setFotoFiles((prev) => [...prev, ...files].slice(0, 3)); // maks 3 foto
+    setFotoFiles((prev) => [...prev, ...files].slice(0, 3));
     setUploadError("");
   }
 
@@ -39,28 +42,40 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
 
   async function handleVerifikasi(status, alasanPenolakan = "") {
     setLoading(true);
-    const res = await verifikasiLaporanAction({
-      laporan_id: laporanId,
-      status,
-      catatan:
-        status === "terverifikasi"
-          ? "Laporan terkonfirmasi valid oleh petugas lapangan."
-          : undefined,
-      alasan_penolakan: status === "ditolak" ? alasanPenolakan : undefined,
-    });
-    setLoading(false);
-
-    if (res.ok) {
-      setShowTolak(false);
-      router.refresh();
-    } else {
-      alert(res.error || "Gagal memperbarui status verifikasi.");
+    setVerifikasiError("");
+    try {
+      const res = await verifikasiLaporanAction({
+        laporan_id: laporanId,
+        status,
+        catatan:
+          status === "terverifikasi"
+            ? "Laporan terkonfirmasi valid oleh petugas lapangan."
+            : undefined,
+        alasan_penolakan: status === "ditolak" ? alasanPenolakan : undefined,
+      });
+      if (res.ok) {
+        setShowTolak(false);
+        router.refresh();
+      } else {
+        setVerifikasiError(res.error || "Gagal memperbarui status verifikasi.");
+      }
+    } catch (err) {
+      setVerifikasiError("Terjadi kesalahan jaringan. Coba lagi.");
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleTindakLanjut(e) {
     e.preventDefault();
     setUploadError("");
+    setActionError("");
+
+    // Validasi client: keterangan minimal 10 karakter
+    if (keterangan.trim().length < 10) {
+      setActionError("Keterangan penanganan minimal 10 karakter.");
+      return;
+    }
 
     // Validasi: foto wajib saat selesai
     if (statusTarget === "selesai" && fotoFiles.length === 0) {
@@ -70,37 +85,41 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
 
     setLoading(true);
 
-    // 1. Upload semua foto bukti terlebih dahulu
-    const buktiPaths = [];
-    for (const file of fotoFiles) {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await uploadFotoAction(fd);
-      if (!res.ok) {
-        setUploadError(`Gagal upload foto: ${res.error}`);
-        setLoading(false);
-        return;
+    try {
+      // 1. Upload semua foto bukti terlebih dahulu
+      const buktiPaths = [];
+      for (const file of fotoFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const uploadRes = await uploadFotoAction(fd);
+        if (!uploadRes.ok) {
+          setUploadError(`Gagal upload foto: ${uploadRes.error}`);
+          return;
+        }
+        buktiPaths.push(uploadRes.data.path);
       }
-      buktiPaths.push(res.data.path);
-    }
 
-    // 2. Simpan tindak lanjut + bukti
-    const res = await catatTindakLanjutAction({
-      laporan_id: laporanId,
-      keterangan,
-      status_baru: statusTarget,
-      bukti_paths: buktiPaths,
-    });
+      // 2. Simpan tindak lanjut + bukti ke database
+      const res = await catatTindakLanjutAction({
+        laporan_id: laporanId,
+        keterangan: keterangan.trim(),
+        status_baru: statusTarget,
+        bukti_paths: buktiPaths,
+      });
 
-    setLoading(false);
-
-    if (res.ok) {
-      setShowTindak(false);
-      setFotoFiles([]);
-      setKeterangan("");
-      router.refresh();
-    } else {
-      alert(res.error || "Gagal mencatat tindak lanjut.");
+      if (res.ok) {
+        setShowTindak(false);
+        setFotoFiles([]);
+        setKeterangan("");
+        setActionError("");
+        router.refresh();
+      } else {
+        setActionError(res.error || "Gagal mencatat tindak lanjut. Coba lagi.");
+      }
+    } catch (err) {
+      setActionError("Terjadi kesalahan jaringan. Periksa koneksi dan coba lagi.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -108,6 +127,12 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
   if (statusSekarang === "menunggu_verifikasi") {
     return (
       <div className="space-y-3 pt-2">
+        {verifikasiError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+            <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+            {verifikasiError}
+          </div>
+        )}
         {!showTolak ? (
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -147,7 +172,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
               <Button
                 size="small"
                 variant="ghost"
-                onClick={() => setShowTolak(false)}
+                onClick={() => { setShowTolak(false); setVerifikasiError(""); }}
               >
                 Batal
               </Button>
@@ -157,7 +182,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
                 disabled={loading || !alasan.trim()}
                 onClick={() => handleVerifikasi("ditolak", alasan)}
               >
-                Konfirmasi Tolak
+                {loading ? <Loader2 className="size-3 animate-spin" /> : "Konfirmasi Tolak"}
               </Button>
             </div>
           </div>
@@ -174,7 +199,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
           <Button
             size="small"
             variant="secondary"
-            onClick={() => setShowTindak(true)}
+            onClick={() => { setShowTindak(true); setActionError(""); setUploadError(""); }}
           >
             + Update Penanganan
           </Button>
@@ -186,6 +211,14 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
             <h4 className="text-xs font-bold text-[#22543d]">
               Catat Tindak Lanjut Penanganan:
             </h4>
+
+            {/* Error inline dari action */}
+            {actionError && (
+              <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+                <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+                {actionError}
+              </div>
+            )}
 
             {/* Status Baru */}
             <div>
@@ -206,15 +239,21 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
             <div>
               <label className="block text-[11px] font-semibold text-[#276749] mb-1">
                 Keterangan Penanganan:
+                <span className="text-[#86998f] font-normal ml-1">(min. 10 karakter)</span>
               </label>
               <textarea
                 value={keterangan}
-                onChange={(e) => setKeterangan(e.target.value)}
+                onChange={(e) => { setKeterangan(e.target.value); setActionError(""); }}
                 required
                 rows={2}
                 placeholder="Rincian armada yang diturunkan, luas yang dipadamkan..."
-                className="w-full text-xs p-2 rounded border border-[#9ae6b4] bg-white outline-none"
+                className="w-full text-xs p-2 rounded border border-[#9ae6b4] bg-white outline-none focus:ring-1 focus:ring-emerald-500"
               />
+              <div className="flex justify-between mt-0.5">
+                <span className={`text-[10px] ${keterangan.trim().length < 10 && keterangan.length > 0 ? "text-red-500" : "text-[#86998f]"}`}>
+                  {keterangan.trim().length} / min 10 karakter
+                </span>
+              </div>
             </div>
 
             {/* Upload Foto Bukti */}
@@ -228,7 +267,6 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
                 )}
               </label>
 
-              {/* Preview foto yang dipilih */}
               {fotoFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {fotoFiles.map((f, i) => (
@@ -272,9 +310,10 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
               )}
 
               {uploadError && (
-                <p className="mt-1 text-[11px] text-red-600 font-medium">
+                <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-1.5 text-xs text-red-700">
+                  <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
                   {uploadError}
-                </p>
+                </div>
               )}
             </div>
 
@@ -288,6 +327,8 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
                   setShowTindak(false);
                   setFotoFiles([]);
                   setUploadError("");
+                  setActionError("");
+                  setKeterangan("");
                 }}
               >
                 Batal
@@ -296,7 +337,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
                 size="small"
                 variant="primary"
                 type="submit"
-                disabled={loading || !keterangan.trim()}
+                disabled={loading || keterangan.trim().length < 10}
               >
                 {loading ? (
                   <span className="flex items-center gap-1.5">
