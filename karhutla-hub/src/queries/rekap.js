@@ -74,3 +74,55 @@ export async function ambilDaftarPetugas() {
 
   return data || [];
 }
+
+/**
+ * Mengambil semua pengguna (pelapor, petugas, admin) untuk halaman manajemen admin.
+ * Menggunakan server client biasa — profiles dapat dibaca oleh admin karena RLS policy.
+ */
+export async function ambilSemuaPengguna() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, nama, nomor_hp, role, created_at, updated_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Gagal mengambil data pengguna:", error.message);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Mengambil semua laporan lengkap untuk tabel monitoring admin.
+ */
+export async function ambilSemuaLaporanLengkap() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("laporan")
+    .select(`
+      id,
+      latitude,
+      longitude,
+      waktu_kejadian,
+      deskripsi,
+      status,
+      catatan_petugas,
+      created_at,
+      updated_at,
+      pelapor:pelapor_id ( id, nama, nomor_hp ),
+      wilayah:wilayah_id ( id, nama_wilayah, kode_wilayah ),
+      fotos:laporan_foto ( id, foto_url )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Gagal mengambil semua laporan:", error.message);
+    return [];
+  }
+
+  return data || [];
+}

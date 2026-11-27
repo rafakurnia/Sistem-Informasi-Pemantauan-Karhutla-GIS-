@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { buatLaporanAction } from "@/actions/laporan";
+import { uploadFotoAction } from "@/actions/upload";
 import Button from "@/components/ui/Button";
 
 export default function FormLaporan({ daftarWilayah = [] }) {
@@ -22,13 +23,30 @@ export default function FormLaporan({ daftarWilayah = [] }) {
     setFieldErrors({});
 
     const form = new FormData(e.target);
+    const alamat = form.get("alamat")?.trim();
+    const deskripsiInput = form.get("deskripsi")?.trim();
+    const deskripsi = alamat
+      ? `[Alamat: ${alamat}] ${deskripsiInput}`
+      : deskripsiInput;
+
+    const fotoPaths = [];
+    const fotoFile = form.get("foto");
+    if (fotoFile && fotoFile.size > 0) {
+      const uploadData = new FormData();
+      uploadData.append("file", fotoFile);
+      const uploadRes = await uploadFotoAction(uploadData);
+      if (uploadRes.ok && uploadRes.data?.path) {
+        fotoPaths.push(uploadRes.data.path);
+      }
+    }
+
     const result = await buatLaporanAction({
       wilayah_id: form.get("wilayah_id"),
       latitude: parseFloat(form.get("latitude")),
       longitude: parseFloat(form.get("longitude")),
       waktu_kejadian: new Date(form.get("waktu_kejadian")).toISOString(),
-      deskripsi: form.get("deskripsi"),
-      foto_paths: [], // sementara tanpa upload storage
+      deskripsi,
+      foto_paths: fotoPaths,
     });
 
     setLoading(false);
@@ -45,7 +63,7 @@ export default function FormLaporan({ daftarWilayah = [] }) {
 
   function isiKoordinatWilayah(e) {
     const wilayahId = e.target.value;
-    const w = daftarWilayah.find((item) => item.id === wilayahId);
+    const w = daftarWilayah.find((item) => String(item.id) === String(wilayahId));
     if (w) {
       const latInput = document.getElementById("lat-input");
       const lngInput = document.getElementById("lng-input");
@@ -160,6 +178,18 @@ export default function FormLaporan({ daftarWilayah = [] }) {
 
             <div>
               <label className="block text-xs font-semibold uppercase text-[#40574d] mb-1">
+                Alamat / Patokan Lokasi
+              </label>
+              <input
+                name="alamat"
+                type="text"
+                placeholder="Contoh: Desa Rimba Panjang, KM 18 pinggir jalan poros"
+                className="w-full rounded-lg border border-[#c8ddd5] bg-white px-3 py-2 text-sm text-[#18372e] outline-none focus:ring-2 focus:ring-[#2d6a4f]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase text-[#40574d] mb-1">
                 Deskripsi Kejadian &amp; Kondisi Lapangan
               </label>
               <textarea
@@ -172,6 +202,18 @@ export default function FormLaporan({ daftarWilayah = [] }) {
               {fieldErrors.deskripsi && (
                 <p className="mt-1 text-xs text-red-600">{fieldErrors.deskripsi}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase text-[#40574d] mb-1">
+                Foto Bukti Kejadian <span className="text-[#a0b3a8] font-normal">(opsional)</span>
+              </label>
+              <input
+                name="foto"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="w-full text-xs p-2 rounded-lg border border-[#c8ddd5] bg-white file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
             </div>
 
             <div className="flex justify-end gap-3 pt-3">

@@ -81,8 +81,9 @@ export async function catatTindakLanjutAction(input) {
   });
 
   revalidatePath("/");
+  revalidatePath("/peta");
   revalidatePath("/dashboard/petugas");
+  revalidatePath("/dashboard/pelapor");
   revalidatePath("/dashboard/admin");
-  return { ok: true, data: { success: true } };
+  return { ok: true, data: { id: tindakLanjut.id, success: true } };
 }
-

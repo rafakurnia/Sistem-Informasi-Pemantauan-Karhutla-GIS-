@@ -72,6 +72,7 @@ export async function buatLaporanAction(input) {
 
   revalidatePath("/dashboard/pelapor");
   revalidatePath("/dashboard/petugas");
+  revalidatePath("/peta");
   return { ok: true, data: { id: laporan.id } };
 }
 

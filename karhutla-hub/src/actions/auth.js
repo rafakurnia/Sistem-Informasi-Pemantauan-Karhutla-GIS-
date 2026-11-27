@@ -4,6 +4,7 @@
 // Pemilik: Rafa
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 import { redirect } from "next/navigation";
 
@@ -67,33 +68,52 @@ export async function registerAction(input) {
     return { ok: false, error: "Data pendaftaran belum valid.", fieldErrors };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
+  const adminSupabase = createAdminClient();
+
+  // Buat user dengan auto-confirm true via Admin API
+  // Ini menghindari pengiriman email SMTP Supabase sehingga BEBAS DARI 'email rate limit exceeded'
+  const { data: authData, error: authError } =
+    await adminSupabase.auth.admin.createUser({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      email_confirm: true,
+      user_metadata: {
         nama: parsed.data.nama,
         nomor_hp: parsed.data.nomor_hp,
       },
-    },
-  });
+    });
 
-  if (error) {
-    return { ok: false, error: error.message };
+  if (authError) {
+    const msg = authError.message?.toLowerCase() || "";
+    if (msg.includes("already registered") || msg.includes("already exists")) {
+      return {
+        ok: false,
+        error: "Email sudah terdaftar. Silakan masuk menggunakan akun Anda.",
+      };
+    }
+    return { ok: false, error: authError.message };
   }
 
-  // Backup insert ke profiles jika trigger database belum terpasang
-  if (data?.user) {
-    await supabase.from("profiles").upsert(
-      {
-        id: data.user.id,
-        nama: parsed.data.nama,
-        nomor_hp: parsed.data.nomor_hp,
-        role: "pelapor",
-      },
-      { onConflict: "id" }
-    );
+  // Simpan/upsert profil ke database tabel 'profiles' dengan role 'pelapor'
+  if (authData?.user) {
+    try {
+      const { error: profError } = await adminSupabase.from("profiles").upsert(
+        {
+          id: authData.user.id,
+          nama: parsed.data.nama,
+          nomor_hp: parsed.data.nomor_hp,
+          role: "pelapor",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+      if (profError) {
+        console.error("Gagal simpan profil pelapor:", profError.message);
+      }
+    } catch (upsertErr) {
+      console.error("Gagal simpan profil pelapor via admin client:", upsertErr);
+    }
   }
 
   return { ok: true, data: { success: true } };

@@ -90,8 +90,9 @@ export async function verifikasiLaporanAction(input) {
   });
 
   revalidatePath("/");
+  revalidatePath("/peta");
   revalidatePath("/dashboard/petugas");
+  revalidatePath("/dashboard/pelapor");
   revalidatePath("/dashboard/admin");
   return { ok: true, data: { success: true } };
 }
-

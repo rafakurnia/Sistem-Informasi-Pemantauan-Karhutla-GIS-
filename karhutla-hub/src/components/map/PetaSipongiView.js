@@ -3,33 +3,31 @@
 // File: src/components/map/PetaSipongiView.js
 // Peta Komprehensif Karhutla Full-Screen ala SiPongi KLHK
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Flame,
   Filter,
-  MapPin,
-  Calendar,
   Layers,
-  ChevronRight,
   X,
   Plus,
   ShieldAlert,
-  ClipboardList,
   CheckCircle2,
   Clock,
   ExternalLink,
-  Info,
-  Maximize2,
   User,
-  ArrowRight,
+  Satellite,
+  Mountain,
+  Moon,
+  Map as MapIcon,
+  Radio,
 } from "lucide-react";
 import { STATUS_LAPORAN_LABEL } from "@/lib/constants/status";
 import { formatTanggal, formatKoordinat } from "@/lib/utils";
 import { buatLaporanAction } from "@/actions/laporan";
-import { verifikasiLaporanAction } from "@/actions/verifikasi";
+import { uploadFotoAction } from "@/actions/upload";
+import { BASEMAPS } from "./basemaps";
 
 const PetaLeaflet = dynamic(() => import("./PetaSipongiInner"), {
   ssr: false,
@@ -59,6 +57,11 @@ export default function PetaSipongiView({
   const [selectedKejadian, setSelectedKejadian] = useState(null);
   const [isLegendOpen, setIsLegendOpen] = useState(true);
   const [activePanel, setActivePanel] = useState(null); // null, "form-laporan", "status-saya"
+
+  // State Basemap & Radar — dikelola di sini agar UI switcher bisa dirender
+  // di luar MapContainer dan tidak terkubur stacking context-nya Leaflet.
+  const [activeBasemap, setActiveBasemap] = useState("satelit");
+  const [radarEffect, setRadarEffect] = useState(true);
 
   // State provinsi yang di-fly-to
   const [targetProvinsi, setTargetProvinsi] = useState(null);
@@ -90,7 +93,19 @@ export default function PetaSipongiView({
   const [formSuccess, setFormSuccess] = useState(false);
 
   // State Laporan Lokal (untuk optimistic update)
-  const [laporanList, setLaporanList] = useState(laporanAwal);
+  // Gabungkan laporan publik dengan laporan milik user sendiri (termasuk menunggu_verifikasi)
+  // agar pin laporan sendiri tetap muncul di peta meski belum terverifikasi.
+  const [laporanList, setLaporanList] = useState(() => {
+    if (!laporanSaya || laporanSaya.length === 0) return laporanAwal;
+    // Hindari duplikat: laporan publik sudah mencakup yang terverifikasi/ditangani/selesai,
+    // tambahkan hanya laporan milik user yang belum ada di daftar publik.
+    const idPublik = new Set(laporanAwal.map((l) => l.id));
+    const tambahanSaya = laporanSaya.filter((l) => !idPublik.has(l.id));
+    return [...laporanAwal, ...tambahanSaya];
+  });
+
+  // State terpisah untuk panel "Laporan Saya" agar sinkron setelah optimistic update
+  const [laporanSayaList, setLaporanSayaList] = useState(laporanSaya);
 
   // Filter Data Kejadian
   const kejadianTersaring = useMemo(() => {
@@ -162,7 +177,23 @@ export default function PetaSipongiView({
     const lng = parseFloat(form.get("longitude"));
     const wilayahId = form.get("wilayah_id");
     const waktu = form.get("waktu_kejadian");
-    const deskripsi = form.get("deskripsi");
+    const alamat = form.get("alamat")?.trim();
+    const deskripsiInput = form.get("deskripsi")?.trim();
+    const deskripsi = alamat
+      ? `[Alamat: ${alamat}] ${deskripsiInput}`
+      : deskripsiInput;
+
+    // Upload foto jika dipilih oleh pelapor
+    const fotoPaths = [];
+    const fotoFile = form.get("foto");
+    if (fotoFile && fotoFile.size > 0) {
+      const uploadData = new FormData();
+      uploadData.append("file", fotoFile);
+      const uploadRes = await uploadFotoAction(uploadData);
+      if (uploadRes.ok && uploadRes.data?.path) {
+        fotoPaths.push(uploadRes.data.path);
+      }
+    }
 
     const res = await buatLaporanAction({
       wilayah_id: wilayahId,
@@ -170,7 +201,7 @@ export default function PetaSipongiView({
       longitude: lng,
       waktu_kejadian: new Date(waktu).toISOString(),
       deskripsi,
-      foto_paths: [],
+      foto_paths: fotoPaths,
     });
 
     setFormLoading(false);
@@ -180,7 +211,7 @@ export default function PetaSipongiView({
       return;
     }
 
-    // Tambah optimis ke peta
+    // Tambah optimis ke peta & laporan saya
     const targetWilayah = daftarWilayah.find((w) => String(w.id) === String(wilayahId));
     const newIncident = {
       id: res.data?.id || `lap-${Date.now()}`,
@@ -190,9 +221,11 @@ export default function PetaSipongiView({
       deskripsi,
       status: "menunggu_verifikasi",
       wilayah: targetWilayah,
+      fotos: fotoPaths.map((p, idx) => ({ id: `foto-${idx}`, foto_url: p })),
     };
 
     setLaporanList((prev) => [newIncident, ...prev]);
+    setLaporanSayaList((prev) => [newIncident, ...prev]);
     setSelectedKejadian(newIncident);
     setFormSuccess(true);
     setFormPickMode(false);
@@ -212,23 +245,76 @@ export default function PetaSipongiView({
   }
 
   return (
-    <div className="relative w-full h-[calc(100vh-70px)] overflow-hidden bg-[#0d2a20] select-none">
-      {/* 1. Leaflet Interactive Map Full Screen */}
-      <PetaLeaflet
-        kejadian={kejadianTersaring}
-        selectedKejadian={selectedKejadian}
-        onSelectKejadian={(item) => {
-          setSelectedKejadian(item);
-          setActivePanel(null); // tutup panel lain saat klik titik
-        }}
-        pickMode={formPickMode}
-        pickedCoord={pickedCoord}
-        onSelectCoordinate={handleSelectCoordinate}
-        targetProvinsi={targetProvinsi}
-      />
+    <div className="relative w-full h-[calc(100vh-70px)] bg-[#0d2a20] select-none">
+      {/* 1. Leaflet Interactive Map — absolute stretch ke seluruh container */}
+      <div className="absolute inset-0 z-0">
+        <PetaLeaflet
+          kejadian={kejadianTersaring}
+          selectedKejadian={selectedKejadian}
+          onSelectKejadian={(item) => {
+            setSelectedKejadian(item);
+            setActivePanel(null);
+          }}
+          pickMode={formPickMode}
+          pickedCoord={pickedCoord}
+          onSelectCoordinate={handleSelectCoordinate}
+          targetProvinsi={targetProvinsi}
+          activeBasemap={activeBasemap}
+          radarEffect={radarEffect}
+        />
+      </div>
 
-      {/* 2. TOP BAR OVERLAY: Filter, Ringkasan Hotspot, & Action Controls */}
-      <div className="absolute top-4 inset-x-4 z-40 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pointer-events-none">
+      {/* 2. BASEMAP SWITCHER — pojok kanan bawah, di atas Leaflet */}
+      <div className="absolute bottom-6 right-4 z-[200] pointer-events-auto">
+        <div className="bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-1 flex-wrap">
+          {Object.entries(BASEMAPS).map(([key, item]) => {
+            const isActive = activeBasemap === key;
+            // Pilih ikon sesuai key
+            const Icon =
+              key === "satelit" ? Satellite
+              : key === "topo"   ? Mountain
+              : key === "dark"   ? Moon
+              : MapIcon;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveBasemap(key)}
+                title={item.attrib}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  isActive
+                    ? "bg-[#173f30] text-white shadow-md shadow-emerald-950/20"
+                    : "text-slate-700 hover:bg-slate-100/80"
+                }`}
+              >
+                <Icon className={`size-3.5 ${isActive ? "text-[#8ecf91]" : "text-slate-500"}`} />
+                <span className="hidden sm:inline">{item.nama}</span>
+              </button>
+            );
+          })}
+
+          <div className="h-5 w-px bg-slate-200 mx-0.5" />
+
+          <button
+            type="button"
+            onClick={() => setRadarEffect((v) => !v)}
+            title="Efek Pemindai Sensor Satelit Real-time"
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+              radarEffect
+                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                : "text-slate-500 hover:bg-slate-100"
+            }`}
+          >
+            <Radio className={`size-3.5 ${radarEffect ? "text-emerald-600 animate-pulse" : "text-slate-400"}`} />
+            <span className="text-[11px] font-bold hidden md:inline">
+              Radar {radarEffect ? "ON" : "OFF"}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. TOP BAR OVERLAY: Filter, Ringkasan Hotspot, & Action Controls */}
+      <div className="absolute top-4 inset-x-4 z-[200] flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pointer-events-none">
         {/* Filter Controls (Card Glassmorphism) */}
         <div className="bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-xl border border-white/40 flex flex-wrap items-center gap-2 pointer-events-auto">
           <div className="flex items-center gap-1.5 text-xs font-bold text-[#143e2f] pr-2 border-r border-slate-200">
@@ -346,7 +432,7 @@ export default function PetaSipongiView({
               <User className="size-3.5 text-[#8ecf91]" />
               <span>
                 {currentUser.role === "pelapor"
-                  ? `Laporan Saya (${laporanSaya.length})`
+                  ? `Laporan Saya (${laporanSayaList.length})`
                   : currentUser.role === "petugas"
                   ? `Antrean Tugas (${antreanVerifikasi.length})`
                   : "Panel Admin"}
@@ -364,8 +450,8 @@ export default function PetaSipongiView({
         </div>
       </div>
 
-      {/* 3. FLOATING LEGENDA STATUS (Pojok Kiri Bawah) */}
-      <div className="absolute bottom-6 left-4 z-30">
+      {/* 4. FLOATING LEGENDA STATUS (Pojok Kiri Bawah) */}
+      <div className="absolute bottom-6 left-4 z-[200]">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/40 p-3.5 min-w-[210px] text-xs transition">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
             <span className="font-bold text-[#143e2f] flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
@@ -403,9 +489,9 @@ export default function PetaSipongiView({
         </div>
       </div>
 
-      {/* 4. DETAIL KEJADIAN FLOATING CARD (Pojok Kanan Bawah/Samping) */}
+      {/* 5. DETAIL KEJADIAN FLOATING CARD (Pojok Kanan Bawah/Samping) */}
       {selectedKejadian && (
-        <div className="absolute right-4 top-24 bottom-6 w-full max-w-sm z-40 flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-200">
+        <div className="absolute right-4 top-24 bottom-20 w-full max-w-sm z-[200] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-200">
           {/* Header Card */}
           <div className="bg-gradient-to-r from-[#173f30] to-[#143628] text-white p-4 flex items-start justify-between">
             <div>
@@ -512,9 +598,9 @@ export default function PetaSipongiView({
         </div>
       )}
 
-      {/* 5. FORM BUAT LAPORAN MENGAMBANG (Drawer SiPongi) */}
+      {/* 6. FORM BUAT LAPORAN MENGAMBANG (Drawer SiPongi) */}
       {activePanel === "form-laporan" && (
-        <div className="absolute left-4 top-24 bottom-6 w-full max-w-md z-50 flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-left-4 duration-200">
+        <div className="absolute left-4 top-24 bottom-6 w-full max-w-md z-[300] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-left-4 duration-200">
           {/* Header Drawer */}
           <div className="bg-gradient-to-r from-[#dc2626] to-[#b91c1c] text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -656,6 +742,18 @@ export default function PetaSipongiView({
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                    Alamat / Patokan Lokasi
+                  </label>
+                  <input
+                    name="alamat"
+                    type="text"
+                    placeholder="Contoh: Desa Rimba Panjang, KM 18 pinggir jalan poros"
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-[#166534]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
                     Deskripsi Situasi Lapangan
                   </label>
                   <textarea
@@ -664,6 +762,18 @@ export default function PetaSipongiView({
                     required
                     placeholder="Sebutkan perkiraan luas kebakaran, vegetasi (gambut/semak), dan akses jalan pemadam..."
                     className="w-full text-xs p-2.5 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-[#166534]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                    Foto Bukti Kejadian <span className="text-slate-400 font-normal">(opsional)</span>
+                  </label>
+                  <input
+                    name="foto"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                   />
                 </div>
 
@@ -689,9 +799,9 @@ export default function PetaSipongiView({
         </div>
       )}
 
-      {/* 6. STATUS LAPORAN / PANEL ROLE PENGGUNA MENGAMBANG */}
+      {/* 7. STATUS LAPORAN / PANEL ROLE PENGGUNA MENGAMBANG */}
       {activePanel === "status-saya" && currentUser && (
-        <div className="absolute right-4 top-24 bottom-6 w-full max-w-sm z-50 flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-200">
+        <div className="absolute right-4 top-24 bottom-20 w-full max-w-sm z-[300] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-200">
           <div className="bg-[#173f30] text-white p-4 flex items-center justify-between">
             <div>
               <span className="text-[10px] uppercase font-bold text-[#8ecf91] block">
@@ -713,14 +823,14 @@ export default function PetaSipongiView({
             {currentUser.role === "pelapor" && (
               <>
                 <h4 className="font-bold text-slate-800 text-xs mb-2">
-                  Riwayat Laporan Saya ({laporanSaya.length}):
+                  Riwayat Laporan Saya ({laporanSayaList.length}):
                 </h4>
-                {laporanSaya.length === 0 ? (
+                {laporanSayaList.length === 0 ? (
                   <p className="text-slate-500 text-center py-6">
                     Anda belum memiliki riwayat laporan. Gunakan tombol &quot;+ Laporkan Karhutla&quot; untuk mengirimkan laporan.
                   </p>
                 ) : (
-                  laporanSaya.map((lap) => (
+                  laporanSayaList.map((lap) => (
                     <div
                       key={lap.id}
                       onClick={() => {

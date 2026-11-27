@@ -69,9 +69,21 @@ export async function middleware(request) {
     }
   }
 
-  // 2. Proteksi Halaman Login & Register (jika sudah login, lempar ke dashboard)
+  // 2. Proteksi Halaman Login & Register — redirect ke dashboard sesuai role
   if ((path === "/login" || path === "/register") && user) {
-    return NextResponse.redirect(new URL("/dashboard/pelapor", request.url));
+    const { data: profileLogin } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const roleLogin = profileLogin?.role || "pelapor";
+    const tujuan =
+      roleLogin === "admin"
+        ? "/dashboard/admin"
+        : roleLogin === "petugas"
+        ? "/dashboard/petugas"
+        : "/dashboard/pelapor";
+    return NextResponse.redirect(new URL(tujuan, request.url));
   }
 
   return response;
