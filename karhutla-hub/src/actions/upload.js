@@ -61,6 +61,16 @@ export async function uploadFotoAction(formData) {
     return { ok: false, error: error.message };
   }
 
-  return { ok: true, data: { path: data.path } };
+  const { data: publicUrlData } = supabase.storage
+    .from("karhutla")
+    .getPublicUrl(data.path);
+
+  return {
+    ok: true,
+    data: {
+      path: data.path,
+      url: publicUrlData.publicUrl,
+    },
+  };
 }
 

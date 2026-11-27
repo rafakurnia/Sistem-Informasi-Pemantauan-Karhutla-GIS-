@@ -191,7 +191,7 @@ export default function PetaSipongiView({
       uploadData.append("file", fotoFile);
       const uploadRes = await uploadFotoAction(uploadData);
       if (uploadRes.ok && uploadRes.data?.path) {
-        fotoPaths.push(uploadRes.data.path);
+        fotoPaths.push(uploadRes.data.url || uploadRes.data.path);
       }
     }
 

@@ -44,29 +44,12 @@ export const verifikasiLaporanSchema = z
     }
   );
 
-export const tindakLanjutSchema = z
-  .object({
-    laporan_id: z.string().uuid("ID laporan tidak valid."),
-    keterangan: z.string().min(10, "Keterangan penanganan minimal 10 karakter."),
-    status_baru: z.enum(["ditangani", "selesai"]),
-    bukti_paths: z.array(z.string()).optional(),
-  })
-  .refine(
-    (data) => {
-      if (
-        data.status_baru === "selesai" &&
-        (!data.bukti_paths || data.bukti_paths.length === 0)
-      ) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message:
-        "Minimal sertakan 1 foto bukti penanganan di lapangan untuk menyelesaikan laporan.",
-      path: ["bukti_paths"],
-    }
-  );
+export const tindakLanjutSchema = z.object({
+  laporan_id: z.string().uuid("ID laporan tidak valid."),
+  keterangan: z.string().min(10, "Keterangan penanganan minimal 10 karakter."),
+  status_baru: z.enum(["ditangani", "selesai"]),
+  bukti_paths: z.array(z.string()).optional(),
+});
 
 export const penugasanSchema = z.object({
   laporan_id: z.string().uuid("ID laporan tidak valid."),
