@@ -55,7 +55,16 @@ export async function catatTindakLanjutAction(input) {
       foto_url: path,
       deskripsi: "Bukti penanganan kebakaran di lokasi.",
     }));
-    await supabase.from("bukti_penanganan").insert(buktiInserts);
+    const { error: buktiError } = await supabase
+      .from("bukti_penanganan")
+      .insert(buktiInserts);
+
+    if (buktiError) {
+      return {
+        ok: false,
+        error: `Foto berhasil diunggah, tetapi bukti gagal disimpan: ${buktiError.message}`,
+      };
+    }
   }
 
   // 3. Update status laporan ke 'ditangani' atau 'selesai'

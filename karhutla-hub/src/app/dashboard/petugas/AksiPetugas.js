@@ -77,12 +77,6 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
       return;
     }
 
-    // Validasi: foto wajib saat selesai
-    if (statusTarget === "selesai" && fotoFiles.length === 0) {
-      setUploadError("Minimal 1 foto bukti penanganan wajib dilampirkan saat menyelesaikan laporan.");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -96,7 +90,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
           setUploadError(`Gagal upload foto: ${uploadRes.error}`);
           return;
         }
-        buktiPaths.push(uploadRes.data.path);
+        buktiPaths.push(uploadRes.data.url || uploadRes.data.path);
       }
 
       // 2. Simpan tindak lanjut + bukti ke database
@@ -260,11 +254,7 @@ export default function AksiPetugas({ laporanId, statusSekarang }) {
             <div>
               <label className="block text-[11px] font-semibold text-[#276749] mb-1">
                 Foto Bukti Penanganan{" "}
-                {statusTarget === "selesai" ? (
-                  <span className="text-red-600">* (wajib)</span>
-                ) : (
-                  <span className="text-[#64776f] font-normal">(opsional)</span>
-                )}
+                <span className="text-[#64776f] font-normal">(opsional)</span>
               </label>
 
               {fotoFiles.length > 0 && (
