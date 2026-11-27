@@ -14,7 +14,7 @@ import {
   Check,
   Globe,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -69,6 +69,10 @@ export default function Navbar() {
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langRef = useRef(null);
 
+  // State untuk auto-hide navbar on scroll down & show on scroll up
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
   const navigationItems = [
     { label: t("nav_home"), href: "/" },
     {
@@ -97,47 +101,65 @@ export default function Navbar() {
     { label: t("nav_about"), href: "/tentang-kami" },
   ];
 
-  useEffect(() => {
-    const supabase = createClient();
+  const loadUser = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    async function loadUser() {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          setUserProfile(null);
-          setLoadingUser(false);
-          return;
-        }
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id, nama, role, no_hp")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        setUserProfile({
-          id: user.id,
-          email: user.email,
-          nama:
-            profile?.nama ||
-            user.user_metadata?.nama ||
-            user.email?.split("@")[0] ||
-            "Pengguna",
-          role: profile?.role || "pelapor",
-        });
-      } catch (err) {
-        console.error("Gagal memuat profil pengguna:", err);
+      if (!user) {
         setUserProfile(null);
-      } finally {
         setLoadingUser(false);
+        return;
       }
-    }
 
+      const { data: profile, error: profErr } = await supabase
+        .from("profiles")
+        .select("id, nama, role, nomor_hp")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profErr) {
+        console.warn("Catatan profil Supabase:", profErr.message);
+      }
+
+      setUserProfile({
+        id: user.id,
+        email: user.email,
+        nama:
+          profile?.nama ||
+          user.user_metadata?.nama ||
+          user.email?.split("@")[0] ||
+          "Pengguna",
+        role: profile?.role || "pelapor",
+      });
+    } catch (err) {
+      console.error("Gagal memuat profil pengguna:", err);
+      setUserProfile(null);
+    } finally {
+      setLoadingUser(false);
+    }
+  }, []);
+
+  // Muat status user setiap kali pathname berubah atau tab aktif kembali
+  useEffect(() => {
     loadUser();
 
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadUser();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [pathname, loadUser]);
+
+  // Dengarkan juga perubahan auth state dari supabase client
+  useEffect(() => {
+    const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -152,10 +174,45 @@ export default function Navbar() {
     return () => {
       subscription?.unsubscribe();
     };
+  }, [loadUser]);
+
+  // Deteksi arah scroll: sembunyikan saat scroll ke bawah, munculkan saat scroll ke atas
+  useEffect(() => {
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+
+      // Di dekat bagian atas halaman (< 60px), navbar selalu tampil
+      if (currentScrollY < 60) {
+        setIsVisible(true);
+      } else if (
+        currentScrollY > lastScrollY.current &&
+        currentScrollY - lastScrollY.current > 6
+      ) {
+        // Scroll ke bawah -> sembunyikan navbar
+        setIsVisible(false);
+        setOpenDropdown(null);
+        setProfileMenuOpen(false);
+        setLangMenuOpen(false);
+      } else if (
+        currentScrollY < lastScrollY.current &&
+        lastScrollY.current - currentScrollY > 6
+      ) {
+        // Scroll ke atas -> munculkan navbar kembali
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   // Close dropdowns on path change or click outside
   useEffect(() => {
+    setIsVisible(true);
     setProfileMenuOpen(false);
     setLangMenuOpen(false);
     setMobileOpen(false);
@@ -182,8 +239,7 @@ export default function Navbar() {
     const supabase = createClient();
     await supabase.auth.signOut();
     setUserProfile(null);
-    router.push("/login");
-    router.refresh();
+    window.location.href = "/login";
   }
 
   if (pathname?.startsWith("/dashboard/admin")) return null;
@@ -199,7 +255,11 @@ export default function Navbar() {
       : roleConfig.pelapor;
 
   return (
-    <header className="site-navbar">
+    <header
+      className={`site-navbar transition-transform duration-300 ease-in-out ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="site-navbar-inner">
         <Link
           className="site-brand"

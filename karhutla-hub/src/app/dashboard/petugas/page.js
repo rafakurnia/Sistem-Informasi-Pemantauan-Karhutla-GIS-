@@ -15,6 +15,8 @@ import {
   Clock,
   Flame,
   FileImage,
+  User,
+  Phone,
 } from "lucide-react";
 
 const STATUS_VARIANT = {
@@ -112,49 +114,58 @@ export default async function PetugasDashboardPage() {
                     <h3 className="text-sm font-bold text-[#18372e]">
                       {lap.wilayah?.nama_wilayah || "Wilayah tidak terdaftar"}
                     </h3>
-                    <p className="text-xs text-[#64776f] mt-0.5">
-                      Pelapor:{" "}
+                    <p className="text-xs text-[#64776f] mt-0.5 flex items-center gap-1">
+                      <User className="size-3" />
                       <span className="font-medium text-[#18372e]">
                         {lap.pelapor?.nama || "Masyarakat"}
-                      </span>{" "}
-                      ({lap.pelapor?.nomor_hp || "Tanpa HP"})
+                      </span>
                     </p>
+                    {lap.pelapor?.nomor_hp && (
+                      <p className="text-xs text-[#64776f] flex items-center gap-1">
+                        <Phone className="size-3" />
+                        {lap.pelapor.nomor_hp}
+                      </p>
+                    )}
                     <p className="text-xs text-[#64776f]">
                       📍 {formatKoordinat(lap.latitude, lap.longitude)}
                     </p>
+                    <p className="text-[11px] text-[#86998f]">
+                      Dilaporkan: {formatTanggal(lap.created_at)}
+                    </p>
                   </div>
 
-                  <p className="text-xs text-[#40574d] bg-white p-3 rounded-lg border border-amber-200">
+                  <p className="text-xs text-[#40574d] bg-white p-3 rounded-lg border border-amber-200 leading-relaxed">
                     {lap.deskripsi}
                   </p>
 
-                  {/* Foto laporan */}
+                  {/* Foto laporan dari pelapor */}
                   {lap.fotos && lap.fotos.length > 0 && (
-                    <div className="flex gap-2 flex-wrap">
-                      {lap.fotos.map((f) => (
-                        <a
-                          key={f.id}
-                          href={f.foto_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline"
-                        >
-                          <FileImage className="size-3" />
-                          Foto {lap.fotos.indexOf(f) + 1}
-                        </a>
-                      ))}
+                    <div>
+                      <p className="text-[11px] font-semibold text-[#64776f] mb-1.5">
+                        Foto dari Pelapor:
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        {lap.fotos.map((f, idx) => (
+                          <a
+                            key={f.id}
+                            href={f.foto_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline bg-blue-50 px-2 py-1 rounded-lg border border-blue-200"
+                          >
+                            <FileImage className="size-3" />
+                            Foto {idx + 1}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  <div className="text-[11px] text-[#86998f]">
-                    Dilaporkan: {formatTanggal(lap.created_at)}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-start justify-between pt-1 gap-3 flex-wrap">
                     <AksiPetugas laporanId={lap.id} statusSekarang="menunggu_verifikasi" />
                     <Link
                       href={`/peta?id=${lap.id}`}
-                      className="text-[11px] font-semibold text-[#166534] hover:underline flex items-center gap-1"
+                      className="text-[11px] font-semibold text-[#166534] hover:underline flex items-center gap-1 shrink-0 mt-2"
                     >
                       <MapPin className="size-3" /> Lihat di Peta
                     </Link>
@@ -211,7 +222,7 @@ export default async function PetugasDashboardPage() {
                       </p>
                     </div>
 
-                    <p className="text-xs text-[#40574d] bg-[#f8faf8] p-3 rounded-lg border border-[#e8eee8]">
+                    <p className="text-xs text-[#40574d] bg-[#f8faf8] p-3 rounded-lg border border-[#e8eee8] leading-relaxed">
                       {lap.deskripsi}
                     </p>
 
@@ -219,26 +230,26 @@ export default async function PetugasDashboardPage() {
                     {tindakLanjut.length > 0 && (
                       <div className="space-y-1.5">
                         <p className="text-[11px] font-bold text-[#64776f] uppercase tracking-wide">
-                          Riwayat penanganan ({tindakLanjut.length})
+                          Riwayat Penanganan ({tindakLanjut.length})
                         </p>
                         {tindakLanjut.map((tl) => (
                           <div
                             key={tl.id}
-                            className="bg-[#f0f9f4] border border-[#c6f6d5] rounded-lg p-2 text-xs text-[#1a4731]"
+                            className="bg-[#f0f9f4] border border-[#c6f6d5] rounded-lg p-2.5 text-xs text-[#1a4731] space-y-1"
                           >
-                            <p>{tl.keterangan}</p>
-                            <p className="text-[10px] text-[#64776f] mt-0.5">
-                              {formatTanggal(tl.created_at)}
+                            <p className="leading-relaxed">{tl.keterangan}</p>
+                            <p className="text-[10px] text-[#64776f]">
+                              🕒 {formatTanggal(tl.created_at)}
                             </p>
                             {tl.bukti && tl.bukti.length > 0 && (
-                              <div className="flex gap-2 flex-wrap mt-1">
+                              <div className="flex gap-2 flex-wrap pt-1">
                                 {tl.bukti.map((b) => (
                                   <a
                                     key={b.id}
                                     href={b.foto_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline"
+                                    className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline bg-blue-50 px-2 py-1 rounded-lg border border-blue-200"
                                   >
                                     <FileImage className="size-3" />
                                     {b.deskripsi || "Bukti"}
@@ -251,11 +262,11 @@ export default async function PetugasDashboardPage() {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-start justify-between pt-1 gap-3 flex-wrap">
                       <AksiPetugas laporanId={lap.id} statusSekarang={lap.status} />
                       <Link
                         href={`/peta?id=${lap.id}`}
-                        className="text-[11px] font-semibold text-[#166534] hover:underline flex items-center gap-1"
+                        className="text-[11px] font-semibold text-[#166534] hover:underline flex items-center gap-1 shrink-0 mt-2"
                       >
                         <MapPin className="size-3" /> Lihat di Peta
                       </Link>
@@ -273,7 +284,7 @@ export default async function PetugasDashboardPage() {
         <div className="flex items-center gap-3">
           <CheckCircle2 className="size-5 text-emerald-600" />
           <h2 className="text-lg font-semibold text-[#18372e] flex items-center gap-2">
-            Laporan Selesai
+            Laporan Selesai Ditangani
             <span className="rounded-full bg-[#e3f2e4] text-[#27633d] px-2.5 py-0.5 text-xs font-bold">
               {laporanSelesai.length}
             </span>
@@ -286,34 +297,67 @@ export default async function PetugasDashboardPage() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {laporanSelesai.map((lap) => (
-              <div
-                key={lap.id}
-                className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4 space-y-2 shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-[#64776f]">
-                    #{lap.id.slice(0, 8)}
-                  </span>
-                  <Badge variant="success">Selesai</Badge>
+            {laporanSelesai.map((lap) => {
+              const semuaBukti = (lap.tindak_lanjut || []).flatMap(
+                (tl) => tl.bukti || []
+              );
+              return (
+                <div
+                  key={lap.id}
+                  className="rounded-xl border border-emerald-200 bg-emerald-50/30 overflow-hidden shadow-sm"
+                >
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50 border-b border-emerald-200">
+                    <span className="text-xs font-mono text-[#64776f]">
+                      #{lap.id.slice(0, 8)}
+                    </span>
+                    <Badge variant="success">Selesai ✓</Badge>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <h3 className="text-sm font-bold text-[#18372e]">
+                      {lap.wilayah?.nama_wilayah || "Wilayah tidak terdaftar"}
+                    </h3>
+                    <p className="text-xs text-[#40574d] line-clamp-2 leading-relaxed">
+                      {lap.deskripsi}
+                    </p>
+
+                    {/* Foto bukti penanganan */}
+                    {semuaBukti.length > 0 && (
+                      <div>
+                        <p className="text-[11px] font-semibold text-emerald-700 mb-1.5">
+                          Bukti Penanganan ({semuaBukti.length} foto):
+                        </p>
+                        <div className="flex gap-2 flex-wrap">
+                          {semuaBukti.map((b, idx) => (
+                            <a
+                              key={b.id}
+                              href={b.foto_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-[11px] text-emerald-700 hover:underline bg-white border border-emerald-300 px-2 py-1 rounded-lg"
+                            >
+                              <FileImage className="size-3" />
+                              Foto {idx + 1}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-2 border-t border-emerald-200/60">
+                      <span className="text-[11px] text-[#86998f]">
+                        {formatTanggal(lap.waktu_kejadian)}
+                      </span>
+                      <Link
+                        href={`/kejadian/${lap.id}`}
+                        className="text-[11px] text-[#166534] font-semibold hover:underline"
+                      >
+                        Detail →
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-[#18372e]">
-                  {lap.wilayah?.nama_wilayah || "Wilayah tidak terdaftar"}
-                </h3>
-                <p className="text-xs text-[#40574d] line-clamp-2">{lap.deskripsi}</p>
-                <div className="flex justify-between items-center pt-1 border-t border-emerald-200/60">
-                  <span className="text-[11px] text-[#86998f]">
-                    {formatTanggal(lap.waktu_kejadian)}
-                  </span>
-                  <Link
-                    href={`/kejadian/${lap.id}`}
-                    className="text-[11px] text-[#166534] font-semibold hover:underline"
-                  >
-                    Detail →
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

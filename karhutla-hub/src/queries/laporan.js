@@ -2,6 +2,7 @@
 // Pemilik: Rafa (fungsi baca data, berjalan di server)
 
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /**
  * Mengambil daftar laporan untuk Peta Publik & Landing Page.
@@ -10,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
  * 2. TIDAK memuat nama atau nomor HP pelapor demi privasi masyarakat.
  */
 export async function ambilLaporanPublik() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("laporan")
@@ -61,7 +62,7 @@ export async function ambilLaporanPublik() {
 export async function ambilDetailKejadian(id) {
   if (!id) return null;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("laporan")

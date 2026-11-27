@@ -17,7 +17,8 @@ export const buatLaporanSchema = z.object({
   deskripsi: z.string().min(10, "Deskripsi kejadian minimal 10 karakter."),
   foto_paths: z
     .array(z.string())
-    .min(1, "Wajib menyertakan minimal 1 foto bukti kebakaran."),
+    .optional()
+    .default([]),
 });
 
 export const verifikasiLaporanSchema = z

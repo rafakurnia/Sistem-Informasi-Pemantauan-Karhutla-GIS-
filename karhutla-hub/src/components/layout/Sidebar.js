@@ -6,18 +6,25 @@ import { usePathname } from "next/navigation";
 import { ClipboardList, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 
-const dashboardAreas = [
-  { href: "/dashboard/admin", label: "Administrasi", icon: LayoutDashboard },
-  { href: "/dashboard/pelapor", label: "Area pelapor", icon: ClipboardList },
-  { href: "/dashboard/petugas", label: "Area petugas", icon: ShieldCheck },
-];
+// Nav items setiap role hanya melihat area kerjanya sendiri.
+// Admin juga mendapat akses ke area petugas untuk memantau.
+const NAV_BY_ROLE = {
+  pelapor: [
+    { href: "/dashboard/pelapor", label: "Area Pelapor", icon: ClipboardList },
+  ],
+  petugas: [
+    { href: "/dashboard/petugas", label: "Area Petugas", icon: ShieldCheck },
+  ],
+  admin: [
+    { href: "/dashboard/admin", label: "Administrasi", icon: LayoutDashboard },
+    { href: "/dashboard/petugas", label: "Area Petugas", icon: ShieldCheck },
+  ],
+};
 
-export default function Sidebar() {
+export default function Sidebar({ role = "pelapor" }) {
   const pathname = usePathname();
-  const isAdminArea = pathname.startsWith("/dashboard/admin");
-  const visibleAreas = isAdminArea
-    ? dashboardAreas.filter(({ href }) => href !== "/dashboard/pelapor")
-    : dashboardAreas;
+  const isAdminArea = role === "admin";
+  const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.pelapor;
 
   return (
     <aside
@@ -43,9 +50,9 @@ export default function Sidebar() {
 
       <p className="dashboard-nav-label">RUANG KERJA</p>
       <nav className="dashboard-navigation" aria-label="Navigasi dashboard">
-        {visibleAreas.map(({ href, label, icon: Icon }) => (
+        {navItems.map(({ href, label, icon: Icon }) => (
           <Link
-            aria-current={pathname === href ? "page" : undefined}
+            aria-current={pathname.startsWith(href) ? "page" : undefined}
             className="dashboard-nav-link"
             href={href}
             key={href}
@@ -64,14 +71,12 @@ export default function Sidebar() {
             wilayah.
           </p>
         </div>
-        {isAdminArea && (
-          <form action={logoutAction}>
-            <button className="dashboard-logout-button" type="submit">
-              <LogOut aria-hidden="true" className="size-4 shrink-0" />
-              <span>Logout sebagai Admin</span>
-            </button>
-          </form>
-        )}
+        <form action={logoutAction}>
+          <button className="dashboard-logout-button" type="submit">
+            <LogOut aria-hidden="true" className="size-4 shrink-0" />
+            <span>Logout</span>
+          </button>
+        </form>
       </div>
     </aside>
   );

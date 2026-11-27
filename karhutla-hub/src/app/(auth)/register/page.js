@@ -37,6 +37,7 @@ export default function RegisterPage() {
       email: formData.get("email"),
       nomor_hp: formData.get("nomor_hp"),
       password,
+      konfirmasi_password: konfirmasi,
     });
 
     setLoading(false);
@@ -59,8 +60,8 @@ export default function RegisterPage() {
             Pendaftaran Berhasil!
           </h2>
           <p className="text-sm text-[#64776f] mb-6">
-            Akun Anda telah dibuat. Silakan cek email untuk verifikasi, lalu
-            masuk ke SIGAPI.
+            Akun Pelapor Anda telah aktif. Silakan masuk untuk mulai memantau dan
+            melaporkan kejadian karhutla.
           </p>
           <Link
             href="/login"

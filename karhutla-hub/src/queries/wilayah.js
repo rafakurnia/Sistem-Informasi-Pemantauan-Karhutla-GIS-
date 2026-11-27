@@ -1,13 +1,14 @@
 // File: src/queries/wilayah.js
 // Pemilik: Rafa
 
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /**
  * Mengambil daftar master data wilayah rawan karhutla.
+ * Data ini bersifat publik — tidak butuh sesi pengguna.
  */
 export async function ambilDaftarWilayah() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("wilayah")
@@ -21,4 +22,3 @@ export async function ambilDaftarWilayah() {
 
   return data || [];
 }
-
